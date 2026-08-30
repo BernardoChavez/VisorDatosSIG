@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>VisorDatosSIG.Web</RootNamespace>
+    <AssemblyName>VisorDatosSIG.Web</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\02_CSharp\VisorDatosSIG.Domain\VisorDatosSIG.Domain.csproj" />
+    <ProjectReference Include="..\02_CSharp\VisorDatosSIG.Application\VisorDatosSIG.Application.csproj" />
+    <ProjectReference Include="..\02_CSharp\VisorDatosSIG.Infrastructure\VisorDatosSIG.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

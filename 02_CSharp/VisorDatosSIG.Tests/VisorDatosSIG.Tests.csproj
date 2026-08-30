@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>VisorDatosSIG.Tests</RootNamespace>
+    <AssemblyName>VisorDatosSIG.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VisorDatosSIG.Domain\VisorDatosSIG.Domain.csproj" />
+    <ProjectReference Include="..\VisorDatosSIG.Application\VisorDatosSIG.Application.csproj" />
+    <ProjectReference Include="..\VisorDatosSIG.Infrastructure\VisorDatosSIG.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

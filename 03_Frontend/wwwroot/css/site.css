@@ -1,0 +1,2102 @@
+/* ==========================================================================
+   VisorDatosSIG 2026 — Design System & Custom Styles (Dark / Light Theme)
+   ========================================================================== */
+
+:root, [data-theme="dark"], [data-bs-theme="dark"], body.theme-dark {
+    --sig-bg-main: #0b132b;
+    --sig-bg-surface: #1c2541;
+    --sig-bg-card: rgba(30, 41, 59, 0.94);
+    --sig-bg-glass: rgba(15, 23, 42, 0.88);
+    --sig-border: rgba(255, 255, 255, 0.12);
+    --sig-border-focus: #38bdf8;
+    --sig-text-main: #f8fafc;
+    --sig-text-muted: #94a3b8;
+    --sig-primary: #0284c7;
+    --sig-primary-hover: #0369a1;
+    --sig-accent: #38bdf8;
+    --sig-success: #10b981;
+    --sig-warning: #f59e0b;
+    --sig-danger: #ef4444;
+    --sig-table-th-bg: rgba(15, 23, 42, 0.85);
+    --sig-table-row-hover: rgba(56, 189, 248, 0.08);
+    --sig-input-bg: rgba(15, 23, 42, 0.7);
+    --sig-input-color: #ffffff;
+    --sig-navbar-bg: linear-gradient(135deg, #0b132b 0%, #1c2541 100%);
+    --sig-shadow: rgba(0, 0, 0, 0.45);
+    --sig-font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --sig-font-mono: 'Fira Code', Consolas, monospace;
+}
+
+[data-theme="light"], [data-bs-theme="light"], body.theme-light {
+    --sig-bg-main: #f8fafc;
+    --sig-bg-surface: #ffffff;
+    --sig-bg-card: rgba(255, 255, 255, 0.96);
+    --sig-bg-glass: rgba(255, 255, 255, 0.92);
+    --sig-border: #cbd5e1;
+    --sig-border-focus: #0284c7;
+    --sig-text-main: #0f172a;
+    --sig-text-muted: #64748b;
+    --sig-primary: #0284c7;
+    --sig-primary-hover: #0369a1;
+    --sig-accent: #0284c7;
+    --sig-table-th-bg: #f1f5f9;
+    --sig-table-row-hover: #f8fafc;
+    --sig-input-bg: #ffffff;
+    --sig-input-color: #0f172a;
+    --sig-navbar-bg: #ffffff;
+    --sig-shadow: rgba(15, 23, 42, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body.sig-app-body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--sig-font-sans);
+    background-color: var(--sig-bg-main);
+    color: var(--sig-text-main);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ==========================================================================
+   Navbar Superior
+   ========================================================================== */
+.sig-navbar-header {
+    height: 58px;
+    background: var(--sig-navbar-bg);
+    border-bottom: 1px solid var(--sig-border);
+    z-index: 1050;
+    flex-shrink: 0;
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sig-navbar {
+    height: 100%;
+    padding: 0;
+}
+
+.sig-brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.sig-brand-logo-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    border: 1px solid var(--sig-border);
+}
+
+.sig-brand-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+    color: var(--sig-text-main);
+    transition: color 0.25s ease;
+}
+
+.sig-badge-year {
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--sig-accent);
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 4px;
+}
+
+.sig-brand-subtitle {
+    font-size: 0.72rem;
+    color: var(--sig-text-muted);
+    transition: color 0.25s ease;
+}
+
+.sig-nav-search {
+    max-width: 480px;
+}
+
+.sig-nav-search .input-group-text {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--sig-border);
+    color: var(--sig-text-muted);
+    transition: all 0.2s ease;
+}
+
+.sig-nav-search .form-control {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--sig-border);
+    color: var(--sig-text-main);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.sig-nav-search .form-control:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--sig-accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+    color: var(--sig-text-main);
+}
+
+.btn-sig-nav {
+    color: var(--sig-text-muted);
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-sig-nav:hover, .btn-sig-nav.active {
+    color: var(--sig-text-main);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--sig-border);
+}
+
+.btn-sig-login {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-sig-login:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.sig-dropdown-menu {
+    background: var(--sig-bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--sig-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    max-width: min(320px, 92vw);
+    color: var(--sig-text-main);
+    z-index: 1100;
+}
+
+.sig-dropdown-menu .dropdown-item {
+    color: var(--sig-text-main);
+    padding: 8px 14px;
+    font-size: 0.86rem;
+    transition: all 0.2s ease;
+}
+
+.sig-dropdown-menu .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--sig-accent);
+}
+
+/* ==========================================================================
+   Contenedor Principal y Mapa
+   ========================================================================== */
+.sig-main-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.sig-viewer-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: block;
+    overflow: hidden;
+}
+
+.sig-map-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute;
+    inset: 0;
+    background-color: #0f172a;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   Sidebar Flotante Desplegable & Backdrop Móvil
+   ========================================================================== */
+.sig-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1035;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sig-sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sig-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 360px;
+    background: var(--sig-bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid var(--sig-border);
+    border-top: none;
+    border-left: none;
+    border-bottom: none;
+    border-radius: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.35);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sig-sidebar.collapsed {
+    transform: translateX(-360px);
+}
+
+.sig-sidebar-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--sig-border);
+    flex-shrink: 0;
+}
+
+.btn-sig-close-sidebar {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--sig-border);
+    color: var(--sig-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    padding: 0;
+}
+
+.btn-sig-close-sidebar:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+    transform: scale(1.05);
+}
+
+.sig-nav-pills .nav-link {
+    color: var(--sig-text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.sig-nav-pills .nav-link.active {
+    background: var(--sig-primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+.sig-sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sig-section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--sig-text-muted);
+    margin-bottom: 8px;
+}
+
+/* Tarjetas de Capa */
+.sig-layer-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--sig-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.sig-layer-card:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.sig-color-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    border: 2px solid #fff;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.sig-geom-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 6px;
+}
+
+/* Tarjetas de Mapa Base */
+.sig-basemap-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--sig-border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sig-basemap-card:hover {
+    border-color: var(--sig-accent);
+}
+
+.sig-basemap-card.active {
+    background: rgba(2, 132, 199, 0.25);
+    border-color: var(--sig-accent);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* Botón Toggle Sidebar */
+.btn-sig-toggle-sidebar {
+    position: absolute;
+    top: 12px;
+    left: 372px;
+    width: 40px;
+    height: 40px;
+    background: var(--sig-bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--sig-border);
+    border-radius: 10px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-sig-toggle-sidebar.collapsed-mode {
+    left: 12px;
+}
+
+.btn-sig-toggle-sidebar:hover {
+    background: var(--sig-primary);
+    color: #fff;
+}
+
+/* ==========================================================================
+   HUD Inferior de Coordenadas y Escala
+   ========================================================================== */
+.sig-map-hud {
+    position: absolute;
+    bottom: 12px;
+    left: 375px;
+    background: var(--sig-bg-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--sig-border);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-family: var(--sig-font-mono);
+    color: var(--sig-text-muted);
+    z-index: 990;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sig-sidebar.collapsed ~ .sig-map-hud {
+    left: 15px;
+}
+
+.sig-hud-divider {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.sig-badge-crs {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--sig-accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Leyenda Flotante
+   ========================================================================== */
+.sig-floating-legend {
+    position: absolute;
+    bottom: 30px;
+    right: 15px;
+    background: var(--sig-bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--sig-border);
+    border-radius: 10px;
+    z-index: 990;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    min-width: 190px;
+    overflow: hidden;
+}
+
+.sig-legend-header {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid var(--sig-border);
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.sig-legend-body {
+    padding: 10px 12px;
+}
+
+.sig-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+    color: #e2e8f0;
+}
+
+.sig-legend-symbol {
+    width: 16px;
+    height: 12px;
+    border-radius: 2px;
+    border: 2px solid;
+    display: inline-block;
+}
+
+.sig-legend-symbol.point {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.sig-legend-symbol.line {
+    width: 18px;
+    height: 0;
+    border-top-width: 3px;
+    border-style: solid;
+}
+
+/* ==========================================================================
+   Barra de Navegación Inferior Flotante Móvil (Mobile Quick Dock)
+   ========================================================================== */
+.sig-mobile-dock {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 440px;
+    height: 58px;
+    background: var(--sig-bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--sig-border);
+    border-radius: 18px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+    z-index: 1010;
+    display: none; /* Oculto en escritorio */
+    align-items: center;
+    justify-content: space-around;
+    padding: 4px 6px;
+    gap: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sig-dock-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--sig-text-muted);
+    padding: 6px 4px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.1;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    gap: 2px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sig-dock-item i {
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.sig-dock-item:hover,
+.sig-dock-item:focus {
+    color: var(--sig-text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sig-dock-item:active {
+    transform: scale(0.92);
+}
+
+.sig-dock-item.active {
+    color: var(--sig-accent);
+    background: rgba(56, 189, 248, 0.18);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.sig-dock-item.active i {
+    transform: translateY(-1px) scale(1.1);
+    color: var(--sig-accent);
+}
+
+/* ==========================================================================
+   Slide-in Entity Details Drawer / Mobile Bottom Sheet
+   ========================================================================== */
+.sig-drawer-handle {
+    width: 44px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    margin: 8px auto 4px auto;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.sig-drawer-handle:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.sig-detail-drawer {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 380px;
+    max-height: calc(100% - 70px);
+    background: var(--sig-bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--sig-border);
+    border-radius: 14px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    transform: translateX(420px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sig-detail-drawer.open {
+    transform: translateX(0);
+}
+
+.sig-detail-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--sig-border);
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 14px 14px 0 0;
+}
+
+.sig-detail-close {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--sig-text-muted);
+    font-size: 1.2rem;
+    padding: 4px;
+}
+
+.sig-detail-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--sig-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.sig-detail-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sig-attr-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.82rem;
+}
+
+.sig-attr-label {
+    color: var(--sig-text-muted);
+    font-weight: 500;
+}
+
+.sig-attr-value {
+    color: #fff;
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* ==========================================================================
+   Resultados de Búsqueda
+   ========================================================================== */
+.sig-search-result-item {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--sig-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sig-search-result-item:hover {
+    background: rgba(2, 132, 199, 0.2);
+    border-color: var(--sig-accent);
+    transform: translateX(3px);
+}
+
+.sig-highlight-match {
+    background: rgba(245, 158, 11, 0.3);
+    color: #fef08a;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   Modales y Formularios
+   ========================================================================== */
+.sig-modal-content {
+    background: var(--sig-bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--sig-border);
+    border-radius: 16px;
+    color: var(--sig-text-main);
+}
+
+.sig-modal-header {
+    border-bottom: 1px solid var(--sig-border);
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 16px 16px 0 0;
+}
+
+[data-theme="light"] .sig-modal-header,
+body.theme-light .sig-modal-header {
+    background: #f8fafc;
+}
+
+.sig-modal-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(2, 132, 199, 0.2);
+    color: var(--sig-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* Switcher / Botón de Tema */
+.btn-sig-theme-toggle {
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--sig-border);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--sig-text-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.btn-sig-theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: var(--sig-accent);
+    color: #fff;
+}
+
+[data-theme="light"] .btn-sig-theme-toggle,
+body.theme-light .btn-sig-theme-toggle {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .btn-sig-theme-toggle:hover,
+body.theme-light .btn-sig-theme-toggle:hover {
+    background: #e2e8f0;
+    border-color: #0284c7;
+    color: #0284c7;
+}
+
+/* Inputs y Selects */
+.sig-input, .sig-select {
+    background: var(--sig-input-bg);
+    border: 1px solid var(--sig-border);
+    color: var(--sig-input-color);
+}
+
+.sig-input:focus, .sig-select:focus {
+    background: var(--sig-input-bg);
+    border-color: var(--sig-primary);
+    color: var(--sig-input-color);
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+
+/* Dashboards de Administración */
+.sig-dashboard-page {
+    background-color: var(--sig-bg-main);
+    min-height: calc(100vh - 58px);
+    color: var(--sig-text-main);
+    overflow-y: auto;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.sig-dashboard-title {
+    color: var(--sig-text-main) !important;
+    letter-spacing: -0.02em;
+}
+
+.sig-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+
+.sig-admin-card {
+    background: var(--sig-bg-surface);
+    border: 1px solid var(--sig-border) !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--sig-shadow);
+    color: var(--sig-text-main);
+    transition: all 0.25s ease;
+}
+
+.sig-table {
+    color: var(--sig-text-main);
+}
+
+.sig-table th {
+    background: var(--sig-table-th-bg) !important;
+    color: var(--sig-text-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--sig-border) !important;
+    padding: 12px 14px;
+}
+
+.sig-table td {
+    border-bottom: 1px solid var(--sig-border) !important;
+    font-size: 0.85rem;
+    padding: 12px 14px;
+    color: var(--sig-text-main);
+}
+
+.sig-table tbody tr:hover {
+    background-color: var(--sig-table-row-hover) !important;
+}
+
+/* ==========================================================================
+   Leaflet Customizations
+   ========================================================================== */
+.leaflet-popup-content-wrapper {
+    background: var(--sig-bg-card) !important;
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--sig-border);
+    border-radius: 12px !important;
+    color: #fff !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+}
+
+.leaflet-popup-tip {
+    background: var(--sig-bg-card) !important;
+    border: 1px solid var(--sig-border);
+}
+
+.leaflet-popup-content {
+    margin: 12px 14px !important;
+    font-family: var(--sig-font-sans);
+}
+
+.sig-popup-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.sig-popup-header h6 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--sig-accent);
+}
+
+.sig-popup-btn {
+    margin-top: 8px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    width: 100%;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* ==========================================================================
+   Controles y Marcador de Geolocalización (GPS)
+   ========================================================================== */
+.sig-map-action-btn {
+    background-color: var(--sig-bg-surface) !important;
+    color: var(--sig-accent) !important;
+    width: 34px !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--sig-border) !important;
+    cursor: pointer;
+    text-decoration: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.sig-map-action-btn:hover {
+    background-color: var(--sig-primary) !important;
+    color: #ffffff !important;
+    transform: scale(1.05);
+}
+
+.sig-map-action-btn.locating {
+    animation: sig-btn-spin 1s linear infinite;
+    color: var(--sig-warning) !important;
+}
+
+@keyframes sig-btn-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Marcador Pulsante del Usuario */
+.sig-user-pulse-icon {
+    position: relative;
+    width: 20px;
+    height: 20px;
+}
+
+.sig-user-pulse-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    background: #0284c7;
+    border: 2.5px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(2, 132, 199, 0.9);
+    z-index: 2;
+}
+
+.sig-user-pulse-wave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(56, 189, 248, 0.5);
+    border-radius: 50%;
+    animation: sig-pulse-animation 1.8s ease-out infinite;
+    z-index: 1;
+}
+
+@keyframes sig-pulse-animation {
+    0% {
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 0;
+    }
+}
+
+/* ==========================================================================
+   Estilos Especializados para Login & Control de Roles
+   ========================================================================== */
+body.sig-login-body {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+}
+
+body.sig-login-body .sig-main-content {
+    overflow-y: auto !important;
+    height: auto !important;
+}
+
+.sig-login-wrapper {
+    position: relative;
+    min-height: calc(100vh - 58px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0b132b 80%, #030712 100%);
+    overflow: hidden;
+}
+
+.sig-login-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.sig-grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+}
+
+.sig-glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+.sig-glow-1 {
+    width: 350px;
+    height: 350px;
+    background: #0284c7;
+    top: 10%;
+    left: 15%;
+}
+
+.sig-glow-2 {
+    width: 400px;
+    height: 400px;
+    background: #6366f1;
+    bottom: 10%;
+    right: 15%;
+}
+
+.sig-brand-badge-large {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #ffffff;
+    box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+}
+
+.sig-card-login-glass {
+    background: rgba(28, 37, 65, 0.75) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.sig-input-group .input-group-text {
+    background-color: rgba(15, 23, 42, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--sig-accent);
+}
+
+.sig-input-group .form-control {
+    background-color: rgba(15, 23, 42, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.sig-input-group .form-control:focus {
+    background-color: rgba(15, 23, 42, 0.9);
+    border-color: var(--sig-accent);
+    box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+    color: #ffffff;
+}
+
+.sig-btn-toggle-pass {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--sig-text-muted);
+}
+
+.sig-btn-toggle-pass:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.sig-btn-submit {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border: none;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.sig-btn-submit:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+    transform: translateY(-1px);
+}
+
+.sig-demo-btn {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.sig-demo-btn:hover {
+    transform: translateY(-2px);
+}
+
+.sig-security-pill {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sig-role-badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    letter-spacing: 0.02em;
+    border-radius: 6px;
+}
+
+.sig-card-access-denied {
+    background: rgba(28, 37, 65, 0.9) !important;
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    border-radius: 16px;
+}
+
+.sig-denied-icon-wrapper {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.15);
+    border: 2px solid rgba(245, 158, 11, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==========================================================================
+   VisorDatosSIG 2026 — Clean Corporate Split-Screen Login (White Enterprise)
+   ========================================================================== */
+
+body.sig-app-body.sig-login-body {
+    background-color: #ffffff;
+    color: #0f172a;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100vh;
+}
+
+.sig-login-main {
+    flex: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.sig-auth-split-layout {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+    width: 100%;
+    background-color: #ffffff;
+}
+
+/* Columna Izquierda: Formulario Blanco */
+.sig-auth-form-column {
+    flex: 0 0 45%;
+    max-width: 45%;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 4rem;
+    position: relative;
+    z-index: 10;
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.04);
+    border-right: 1px solid #e2e8f0;
+}
+
+@media (max-width: 1200px) {
+    .sig-auth-form-column {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding: 2.5rem 2.5rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sig-auth-form-column {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 2rem 1.5rem;
+        border-right: none;
+    }
+}
+
+.sig-auth-form-container {
+    width: 100%;
+    max-width: 440px;
+    margin: auto 0;
+}
+
+/* Brand Icon */
+.sig-auth-brand-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 16px -4px rgba(2, 132, 199, 0.35);
+}
+
+.sig-auth-brand-logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 8px 16px -4px rgba(2, 132, 199, 0.35);
+    border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.sig-brand-heading {
+    letter-spacing: -0.03em;
+    color: #0f172a;
+}
+
+/* Inputs Corporativos */
+.sig-clean-input-group {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.sig-clean-input-group .input-group-text {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #64748b;
+    font-size: 1.1rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+}
+
+.sig-clean-input-group .form-control {
+    border-color: #cbd5e1;
+    color: #0f172a;
+    font-size: 0.95rem;
+    padding: 0.65rem 0.85rem;
+    background-color: #ffffff;
+}
+
+.sig-clean-input-group .form-control:focus {
+    background-color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    color: #0f172a;
+}
+
+.sig-btn-pass-toggle {
+    border-color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+}
+
+.sig-btn-pass-toggle:hover {
+    color: #0284c7 !important;
+    background-color: #f1f5f9 !important;
+}
+
+/* Botón Principal Corporativo */
+.btn-sig-corporate-primary {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.btn-sig-corporate-primary:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+
+.btn-sig-corporate-primary:active {
+    transform: translateY(0);
+}
+
+/* Botones de Rol Sandbox */
+.sig-demo-credentials-box {
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1 !important;
+}
+
+.sig-role-btn {
+    border-color: #cbd5e1;
+    color: #334155;
+    background-color: #ffffff;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
+}
+
+.sig-role-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+    transform: translateY(-1px);
+}
+
+/* Columna Derecha: Renderizador Visual Puro & Animación Lottie */
+.sig-auth-visual-pure {
+    flex: 1;
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 2rem;
+}
+
+@media (max-width: 991.98px) {
+    .sig-auth-visual-pure {
+        display: none !important;
+    }
+}
+
+/* Fondo Tecnológico Grid & Glow */
+.sig-visual-backdrop-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(2, 132, 199, 0.12) 1px, transparent 0);
+    background-size: 28px 28px;
+    pointer-events: none;
+}
+
+.sig-visual-glow-sphere {
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(2, 132, 199, 0.06) 50%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    filter: blur(45px);
+}
+
+/* Contenedor Puro Central */
+.sig-visual-pure-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+.sig-lottie-player-canvas-clean {
+    width: 100%;
+    max-width: 520px;
+    height: 440px;
+    filter: drop-shadow(0 14px 28px rgba(2, 132, 199, 0.12));
+}
+
+.sig-lottie-fallback {
+    width: 100%;
+    max-width: 520px;
+    height: 440px;
+}
+
+/* Efecto de Letras Escritas (Tipografía Consolas, Sin Caja de Fondo, Color Negro) */
+.sig-handwritten-container {
+    position: relative;
+    z-index: 6;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 0.5rem;
+}
+
+.sig-handwritten-text {
+    font-family: 'Consolas', 'Cascadia Code', 'Fira Code', 'Monaco', 'Courier New', monospace;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #000000 !important;
+    letter-spacing: 0.03em;
+    text-shadow: none;
+    transition: color 0.3s ease;
+    user-select: none;
+}
+
+.sig-handwritten-cursor {
+    font-family: 'Consolas', 'Cascadia Code', 'Fira Code', 'Monaco', 'Courier New', monospace;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #000000 !important;
+    margin-left: 2px;
+    line-height: 1;
+    animation: sigBlinkCursor 0.75s infinite ease-in-out;
+    user-select: none;
+}
+
+@keyframes sigBlinkCursor {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+/* ==========================================================================
+   Adaptación de Componentes a Modo Claro (Light Theme)
+   ========================================================================== */
+
+[data-theme="light"] .sig-sidebar,
+body.theme-light .sig-sidebar {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #cbd5e1;
+    color: #0f172a;
+    box-shadow: 6px 0 24px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .sig-sidebar-header,
+body.theme-light .sig-sidebar-header {
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .sig-layer-card,
+body.theme-light .sig-layer-card {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-layer-card:hover,
+body.theme-light .sig-layer-card:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .sig-basemap-card,
+body.theme-light .sig-basemap-card {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #334155;
+}
+
+[data-theme="light"] .sig-basemap-card:hover,
+body.theme-light .sig-basemap-card:hover {
+    border-color: #0284c7;
+    background: #ffffff;
+}
+
+[data-theme="light"] .sig-basemap-card.active,
+body.theme-light .sig-basemap-card.active {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    color: #0369a1;
+}
+
+[data-theme="light"] .sig-search-result-item,
+body.theme-light .sig-search-result-item {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-search-result-item:hover,
+body.theme-light .sig-search-result-item:hover {
+    background: #ffffff;
+    border-color: #0284c7;
+}
+
+[data-theme="light"] .sig-detail-drawer,
+body.theme-light .sig-detail-drawer {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .sig-detail-header,
+body.theme-light .sig-detail-header {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .sig-detail-drawer .btn-close,
+body.theme-light .sig-detail-drawer .btn-close {
+    filter: none;
+}
+
+[data-theme="light"] .sig-attr-row,
+body.theme-light .sig-attr-row {
+    border-color: #f1f5f9;
+}
+
+[data-theme="light"] .sig-attr-value,
+body.theme-light .sig-attr-value {
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-floating-legend,
+body.theme-light .sig-floating-legend {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .sig-legend-header,
+body.theme-light .sig-legend-header {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-legend-item,
+body.theme-light .sig-legend-item {
+    color: #334155;
+}
+
+[data-theme="light"] .sig-map-hud,
+body.theme-light .sig-map-hud {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #cbd5e1;
+    color: #475569;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .btn-sig-toggle-sidebar,
+body.theme-light .btn-sig-toggle-sidebar {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .btn-sig-toggle-sidebar:hover,
+body.theme-light .btn-sig-toggle-sidebar:hover {
+    background: var(--sig-primary);
+    color: #ffffff;
+}
+
+[data-theme="light"] .btn-sig-close-sidebar,
+body.theme-light .btn-sig-close-sidebar {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #64748b;
+}
+
+[data-theme="light"] .btn-sig-close-sidebar:hover,
+body.theme-light .btn-sig-close-sidebar:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #ef4444;
+}
+
+[data-theme="light"] .sig-drawer-handle,
+body.theme-light .sig-drawer-handle {
+    background: rgba(15, 23, 42, 0.2);
+}
+
+[data-theme="light"] .sig-mobile-dock,
+body.theme-light .sig-mobile-dock {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 36px rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .sig-dock-item,
+body.theme-light .sig-dock-item {
+    color: #64748b;
+}
+
+[data-theme="light"] .sig-dock-item.active,
+body.theme-light .sig-dock-item.active {
+    background: #e0f2fe;
+    color: #0284c7;
+    box-shadow: 0 0 12px rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="light"] .leaflet-popup-content-wrapper,
+body.theme-light .leaflet-popup-content-wrapper {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .leaflet-popup-tip,
+body.theme-light .leaflet-popup-tip {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .sig-tools-list .list-group-item,
+body.theme-light .sig-tools-list .list-group-item {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-tools-list .list-group-item:hover,
+body.theme-light .sig-tools-list .list-group-item:hover {
+    background: #f8fafc;
+}
+
+[data-theme="light"] .sig-tools-list .list-group-item.active,
+body.theme-light .sig-tools-list .list-group-item.active {
+    background: #e0f2fe !important;
+    border-color: #0284c7 !important;
+    color: #0369a1 !important;
+}
+
+[data-theme="light"] .sig-card-tool,
+body.theme-light .sig-card-tool {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-dropdown-menu,
+body.theme-light .sig-dropdown-menu {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .sig-dropdown-menu .dropdown-item,
+body.theme-light .sig-dropdown-menu .dropdown-item {
+    color: #334155;
+}
+
+[data-theme="light"] .sig-dropdown-menu .dropdown-item:hover,
+body.theme-light .sig-dropdown-menu .dropdown-item:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-navbar-header,
+body.theme-light .sig-navbar-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .sig-brand-title,
+body.theme-light .sig-brand-title {
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-brand-subtitle,
+body.theme-light .sig-brand-subtitle {
+    color: #64748b;
+}
+
+[data-theme="light"] .sig-nav-search .input-group-text,
+body.theme-light .sig-nav-search .input-group-text {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #64748b;
+}
+
+[data-theme="light"] .sig-nav-search .form-control,
+body.theme-light .sig-nav-search .form-control {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-nav-search .form-control:focus,
+body.theme-light .sig-nav-search .form-control:focus {
+    background: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    color: #0f172a;
+}
+
+[data-theme="light"] .btn-sig-nav,
+body.theme-light .btn-sig-nav {
+    color: #475569;
+}
+
+[data-theme="light"] .btn-sig-nav:hover,
+body.theme-light .btn-sig-nav:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+[data-theme="light"] .btn-sig-nav.active,
+body.theme-light .btn-sig-nav.active {
+    color: #0284c7;
+    background: #e0f2fe;
+    border-color: #bae6fd;
+    font-weight: 600;
+}
+
+[data-theme="light"] .sig-user-name,
+body.theme-light .sig-user-name {
+    color: #0f172a;
+}
+
+[data-theme="light"] .sig-user-fullname,
+body.theme-light .sig-user-fullname {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .sig-dropdown-user-header,
+body.theme-light .sig-dropdown-user-header {
+    background: #f8fafc;
+    border-color: #e2e8f0 !important;
+}
+
+/* ==========================================================================
+   Responsividad 100% para Celulares y Tablets
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+    .sig-nav-search {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Navbar móvil */
+    .sig-navbar-header {
+        height: 52px;
+    }
+
+    .sig-brand-title {
+        font-size: 0.9rem;
+        letter-spacing: -0.2px;
+        max-width: 145px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sig-brand-logo-img {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+    }
+
+    .btn-sig-nav {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+        min-width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-sig-theme-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+        padding: 0 !important;
+    }
+
+    /* Sidebar SIG móvil (Offcanvas elegante con backdrop) */
+    .sig-sidebar {
+        width: min(380px, calc(100vw - 20px));
+        left: 10px;
+        top: 10px;
+        bottom: 78px;
+        max-height: calc(100vh - 145px);
+        z-index: 1040;
+        border-radius: 18px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        transform: translateX(calc(-100% - 30px));
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sig-sidebar.collapsed {
+        transform: translateX(calc(-100% - 30px));
+        pointer-events: none;
+    }
+
+    .sig-sidebar:not(.collapsed) {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+
+    /* Botón flotante toggle en móvil (visible solo cuando está colapsado) */
+    .btn-sig-toggle-sidebar {
+        top: 10px;
+        left: 10px;
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+        z-index: 1020;
+        border-radius: 10px;
+    }
+
+    .btn-sig-toggle-sidebar:not(.collapsed-mode) {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Dock Móvil Activo */
+    .sig-mobile-dock {
+        display: flex !important;
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 24px);
+        max-width: 440px;
+        height: 58px;
+        z-index: 1010;
+    }
+
+    /* Entity Details Drawer en Móvil (Bottom Sheet) */
+    .sig-detail-drawer {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 72vh;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(105%);
+        z-index: 1050;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.55);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sig-detail-drawer.open {
+        transform: translateY(0);
+    }
+
+    .sig-detail-header {
+        border-radius: 20px 20px 0 0;
+        padding-top: 6px;
+    }
+
+    /* HUD móvil sobre el dock */
+    .sig-map-hud {
+        position: absolute;
+        left: 10px;
+        bottom: 76px;
+        font-size: 0.68rem;
+        padding: 3px 8px;
+        gap: 5px;
+        max-width: calc(100% - 20px);
+        white-space: nowrap;
+        overflow-x: auto;
+        border-radius: 6px;
+        z-index: 990;
+        pointer-events: auto;
+        scrollbar-width: none;
+    }
+
+    .sig-map-hud::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Leyenda en Móvil: solo visible al expandirse desde el dock */
+    .sig-floating-legend {
+        display: none;
+        position: absolute;
+        right: 10px;
+        bottom: 76px;
+        width: auto;
+        min-width: 180px;
+        max-width: calc(100vw - 20px);
+        max-height: 48vh;
+        overflow-y: auto;
+        font-size: 0.72rem;
+        z-index: 1005;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .sig-floating-legend.expanded {
+        display: block !important;
+        animation: sigSlideUpFade 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Leaflet Attribution Móvil */
+    .leaflet-control-attribution {
+        font-size: 8.5px !important;
+        line-height: 1.1 !important;
+        padding: 2px 5px !important;
+        background: rgba(15, 23, 42, 0.75) !important;
+        color: var(--sig-text-muted) !important;
+        max-width: 150px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        border-radius: 6px 0 0 0 !important;
+        margin: 0 !important;
+    }
+
+    [data-theme="light"] .leaflet-control-attribution,
+    body.theme-light .leaflet-control-attribution {
+        background: rgba(255, 255, 255, 0.8) !important;
+        color: #64748b !important;
+    }
+
+    /* Leaflet Scale Control Móvil */
+    .leaflet-control-scale {
+        margin-bottom: 74px !important;
+        margin-left: 10px !important;
+    }
+
+    .leaflet-control-scale-line {
+        background: rgba(15, 23, 42, 0.75) !important;
+        color: #f8fafc !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+        font-size: 9px !important;
+        padding: 1px 4px !important;
+    }
+
+    [data-theme="light"] .leaflet-control-scale-line,
+    body.theme-light .leaflet-control-scale-line {
+        background: rgba(255, 255, 255, 0.85) !important;
+        color: #0f172a !important;
+        border-color: #475569 !important;
+    }
+
+    /* Controles de Zoom y Acción en Móvil */
+    .leaflet-top.leaflet-right {
+        top: 8px !important;
+        right: 8px !important;
+    }
+
+    .leaflet-control-zoom {
+        border: 1px solid var(--sig-border) !important;
+        border-radius: 8px !important;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .leaflet-control-zoom a {
+        width: 34px !important;
+        height: 34px !important;
+        line-height: 34px !important;
+        font-size: 16px !important;
+        background-color: var(--sig-bg-surface) !important;
+        color: var(--sig-text-main) !important;
+        border-bottom-color: var(--sig-border) !important;
+    }
+
+    [data-theme="light"] .leaflet-control-zoom a,
+    body.theme-light .leaflet-control-zoom a {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-bottom-color: #e2e8f0 !important;
+    }
+
+    /* Dashboards de Administración */
+    .sig-dashboard-page {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 1rem !important;
+        min-height: calc(100vh - 54px);
+    }
+
+    .sig-dashboard-title {
+        font-size: 1.2rem;
+    }
+
+    .sig-admin-card {
+        border-radius: 10px;
+    }
+
+    .sig-table th, .sig-table td {
+        padding: 8px 10px;
+        font-size: 0.78rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sig-sidebar {
+        width: calc(100% - 16px);
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        bottom: 74px;
+        max-height: calc(100vh - 138px);
+    }
+
+    .btn-sig-toggle-sidebar {
+        left: 8px;
+        top: 8px;
+    }
+
+    .sig-map-hud .sig-badge-crs {
+        display: none;
+    }
+
+    .sig-mobile-dock {
+        bottom: 10px;
+        width: calc(100% - 16px);
+        height: 56px;
+        padding: 3px 4px;
+    }
+
+    .sig-dock-item {
+        padding: 4px 4px;
+        font-size: 0.62rem;
+    }
+
+    .sig-dock-item i {
+        font-size: 1.05rem;
+    }
+}
+
+@keyframes sigSlideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+

@@ -1,0 +1,577 @@
+@model List<UsuarioDto>
+@{
+    ViewData["Title"] = "Gestión de Usuarios y Permisos";
+    var catalogoPermisos = ViewBag.CatalogoPermisos as List<GrupoPermisosDto> ?? new List<GrupoPermisosDto>();
+}
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4 sig-dashboard-page">
+    <!-- Encabezado Principal -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 sig-dashboard-title"><i class="bi bi-people-fill text-success me-2"></i>Gestión de Usuarios y Permisos</h3>
+            <p class="text-muted small mb-0">Administración de credenciales y configuración granular de capas, herramientas y módulos visibles en el visor.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm px-3" onclick="abrirModalCrearUsuario()">
+                <i class="bi bi-person-plus-fill"></i><span>+ Nuevo Usuario</span>
+            </button>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i><span>Volver al Visor</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Resumen de Métricas Rápidas -->
+    <div class="row g-2 g-md-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Total Usuarios</span>
+                        <h4 class="fw-bold mb-0 text-primary">@(Model?.Count ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Activos</span>
+                        <h4 class="fw-bold mb-0 text-success">@(Model?.Count(u => u.Activo) ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Administradores</span>
+                        <h4 class="fw-bold mb-0 text-warning">@(Model?.Count(u => u.Rol == "Administrador") ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Consultores / Especiales</span>
+                        <h4 class="fw-bold mb-0 text-info">@(Model?.Count(u => u.Rol == "Consultor") ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-person-gear"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <div class="card sig-admin-card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle sig-table text-nowrap">
+                    <thead>
+                        <tr>
+                            <th># ID</th>
+                            <th>Usuario</th>
+                            <th>Nombre Completo</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Permisos Asignados</th>
+                            <th>Estado</th>
+                            <th>Último Acceso</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">No se encontraron usuarios registrados.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var u in Model)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary-subtle text-secondary border">#@u.IdUsuario</span></td>
+                                    <td class="fw-bold text-primary">
+                                        <i class="bi bi-person-circle me-1"></i>@u.Username
+                                    </td>
+                                    <td>@u.NombreCompleto</td>
+                                    <td><small class="text-muted">@u.Email</small></td>
+                                    <td>
+                                        <span class="badge @(u.Rol == "Administrador" ? "bg-warning-subtle text-warning border border-warning-subtle" : "bg-primary-subtle text-primary border border-primary-subtle")">
+                                            <i class="bi @(u.Rol == "Administrador" ? "bi-shield-fill" : "bi-eye-fill") me-1"></i>@u.Rol
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                                <i class="bi bi-toggles me-1"></i>@(u.Permisos?.Count ?? 0) activos
+                                            </span>
+                                            <button class="btn btn-xs btn-outline-info py-0 px-1" onclick="editarPermisosUsuario(@u.IdUsuario, '@u.Username', '@u.NombreCompleto', @u.IdRol, @(u.Activo ? "true" : "false"))" title="Configurar qué verá este usuario">
+                                                <i class="bi bi-gear-fill"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(u.Activo ? "bg-success-subtle text-success border border-success-subtle" : "bg-danger-subtle text-danger border border-danger-subtle")">
+                                            <i class="bi @(u.Activo ? "bi-check-circle-fill" : "bi-x-circle-fill") me-1"></i>@(u.Activo ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">@(u.UltimoAcceso?.ToString("yyyy-MM-dd HH:mm") ?? "Nunca")</td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button class="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1" 
+                                                    onclick="editarPermisosUsuario(@u.IdUsuario, '@u.Username', '@u.NombreCompleto', @u.IdRol, @(u.Activo ? "true" : "false"))" 
+                                                    title="Editar configuración y permisos">
+                                                <i class="bi bi-pencil-square"></i><span>Permisos</span>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary py-1 px-2" 
+                                                    onclick="toggleEstadoUsuario(@u.IdUsuario, '@u.Username', @(u.Activo ? "true" : "false"))" 
+                                                    title="@(u.Activo ? "Desactivar cuenta" : "Activar cuenta")">
+                                                <i class="bi @(u.Activo ? "bi-pause-circle" : "bi-play-circle")"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger py-1 px-2" 
+                                                    onclick="eliminarUsuario(@u.IdUsuario, '@u.Username')" 
+                                                    title="Eliminar usuario">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: CREAR / EDITAR USUARIO Y CONFIGURACIÓN DE PERMISOS GRANULARES      -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="modalUsuarioPermisos" tabindex="-1" aria-labelledby="modalUsuarioPermisosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content sig-modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom border-dark-subtle">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="sig-stat-icon bg-primary-subtle text-primary" style="width: 38px; height: 38px; font-size: 1.2rem;">
+                        <i class="bi bi-person-gear" id="modalIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalUsuarioPermisosLabel">Nuevo Usuario con Acceso Personalizado</h5>
+                        <small class="text-muted" id="modalSubLabel">Configure las credenciales y las opciones del visor habilitadas para este usuario.</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-3 p-md-4">
+                <form id="formUsuario">
+                    <input type="hidden" id="txtIdUsuario" value="0">
+
+                    <!-- SECCIÓN 1: DATOS DE CUENTA -->
+                    <div class="card sig-admin-card p-3 mb-3 bg-body-tertiary">
+                        <h6 class="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                            <i class="bi bi-person-badge"></i> Datos de la Cuenta y Credenciales
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nombre de Usuario <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-at"></i></span>
+                                    <input type="text" class="form-control sig-input" id="txtUsername" placeholder="ej. jgomez" required autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nombre Completo <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control sig-input" id="txtNombreCompleto" placeholder="ej. Juan Gómez" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Correo Electrónico <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control sig-input" id="txtEmail" placeholder="usuario@sig.pe" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold" id="lblPassword">Contraseña <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                    <input type="password" class="form-control sig-input" id="txtPassword" placeholder="Contraseña segura" autocomplete="new-password">
+                                </div>
+                                <small class="text-muted d-none" id="lblPasswordHelp" style="font-size: 0.72rem;">Dejar en blanco para mantener la contraseña actual.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Rol del Sistema</label>
+                                <select class="form-select form-select-sm sig-select" id="cboRol" onchange="alCambiarRol()">
+                                    <option value="2">Consultor (Acceso Personalizado)</option>
+                                    <option value="1">Administrador (Acceso Total)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check form-switch mb-1">
+                                    <input class="form-check-input" type="checkbox" id="chkUsuarioActivo" checked>
+                                    <label class="form-check-label small fw-semibold" for="chkUsuarioActivo">Cuenta Activa</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 2: PERMISOS Y OPCIONES VISIBLES EN EL DASHBOARD -->
+                    <div class="card sig-admin-card p-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-0 text-success d-flex align-items-center gap-2">
+                                    <i class="bi bi-sliders2-vertical"></i> Opciones Visibles en el Dashboard Cartográfico
+                                </h6>
+                                <small class="text-muted">Marque o desmarque qué capas, herramientas y módulos verá este usuario al ingresar.</small>
+                            </div>
+                            <!-- Botones de Presets Rápidos -->
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Plantillas de permisos">
+                                <button type="button" class="btn btn-outline-secondary btn-xs py-1" onclick="aplicarPreset('todos')">
+                                    <i class="bi bi-check-all me-1"></i>Todo
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-xs py-1" onclick="aplicarPreset('visor')">
+                                    <i class="bi bi-layers me-1"></i>Visor Estándar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-xs py-1" onclick="aplicarPreset('campo')">
+                                    <i class="bi bi-geo-alt me-1"></i>Técnico Campo
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-xs py-1" onclick="aplicarPreset('limpiar')">
+                                    <i class="bi bi-x-lg me-1"></i>Desmarcar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Grilla de Categorías de Permisos -->
+                        <div class="row g-3" id="contenedorCategoriasPermisos">
+                            @foreach (var grupo in catalogoPermisos)
+                            {
+                                <div class="col-md-6">
+                                    <div class="border rounded p-2 h-100 bg-body-tertiary">
+                                        <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                                            <span class="fw-bold small text-uppercase text-secondary">
+                                                @if (grupo.Categoria == "Capas") { <i class="bi bi-stack text-primary me-1"></i> }
+                                                else if (grupo.Categoria == "Herramientas") { <i class="bi bi-tools text-success me-1"></i> }
+                                                else if (grupo.Categoria == "Funcionalidades") { <i class="bi bi-search text-warning me-1"></i> }
+                                                else { <i class="bi bi-shield-lock text-danger me-1"></i> }
+                                                @grupo.Categoria
+                                            </span>
+                                            <button type="button" class="btn btn-xs btn-link text-decoration-none p-0" onclick="toggleCategoria('@grupo.Categoria')">
+                                                Invertir
+                                            </button>
+                                        </div>
+
+                                        <div class="d-flex flex-column gap-2">
+                                            @foreach (var p in grupo.Permisos)
+                                            {
+                                                <div class="form-check form-switch mb-0 d-flex align-items-center justify-content-between">
+                                                    <label class="form-check-label small" for="chk_perm_@p.CodigoPermiso" style="cursor: pointer;">
+                                                        <span class="fw-semibold">@p.Nombre</span>
+                                                        @if (!string.IsNullOrEmpty(p.Descripcion))
+                                                        {
+                                                            <span class="d-block text-muted" style="font-size: 0.72rem;">@p.Descripcion</span>
+                                                        }
+                                                    </label>
+                                                    <input class="form-check-input flex-shrink-0 ms-2 chk-permiso-item" 
+                                                           type="checkbox" 
+                                                           role="switch" 
+                                                           id="chk_perm_@p.CodigoPermiso" 
+                                                           data-codigo="@p.CodigoPermiso"
+                                                           data-categoria="@grupo.Categoria">
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer border-top border-dark-subtle justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-success px-4 d-flex align-items-center gap-1 shadow" id="btnGuardarUsuario" onclick="guardarUsuario()">
+                    <i class="bi bi-check-lg"></i><span id="btnGuardarTexto">Guardar Usuario</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-xs { font-size: 0.75rem; padding: 0.15rem 0.4rem; }
+    .sig-modal-content {
+        background: var(--sig-card-bg, #1a1e29);
+        color: var(--sig-text, #f8f9fa);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+</style>
+
+@section Scripts {
+<script>
+    let modalInstance = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('modalUsuarioPermisos');
+        if (modalEl) {
+            modalInstance = new bootstrap.Modal(modalEl);
+        }
+    });
+
+    function abrirModalCrearUsuario() {
+        document.getElementById('txtIdUsuario').value = '0';
+        document.getElementById('modalUsuarioPermisosLabel').innerText = 'Nuevo Usuario con Acceso Personalizado';
+        document.getElementById('modalSubLabel').innerText = 'Configure las credenciales y las opciones del visor habilitadas para este usuario.';
+        document.getElementById('modalIcon').className = 'bi bi-person-plus-fill';
+        document.getElementById('btnGuardarTexto').innerText = 'Crear Usuario';
+
+        document.getElementById('txtUsername').value = '';
+        document.getElementById('txtUsername').disabled = false;
+        document.getElementById('txtNombreCompleto').value = '';
+        document.getElementById('txtEmail').value = '';
+        document.getElementById('txtPassword').value = '';
+        document.getElementById('txtPassword').required = true;
+        document.getElementById('lblPassword').innerHTML = 'Contraseña <span class="text-danger">*</span>';
+        document.getElementById('lblPasswordHelp').classList.add('d-none');
+        document.getElementById('cboRol').value = '2';
+        document.getElementById('chkUsuarioActivo').checked = true;
+
+        // Por defecto aplicar preset de visor estándar
+        aplicarPreset('visor');
+
+        if (modalInstance) modalInstance.show();
+    }
+
+    async function editarPermisosUsuario(idUsuario, username, nombreCompleto, idRol, activo) {
+        document.getElementById('txtIdUsuario').value = idUsuario;
+        document.getElementById('modalUsuarioPermisosLabel').innerText = `Configurar Usuario: ${username}`;
+        document.getElementById('modalSubLabel').innerText = 'Ajuste los datos de la cuenta y los permisos de visualización del dashboard.';
+        document.getElementById('modalIcon').className = 'bi bi-sliders2';
+        document.getElementById('btnGuardarTexto').innerText = 'Guardar Cambios';
+
+        document.getElementById('txtUsername').value = username;
+        document.getElementById('txtUsername').disabled = true;
+        document.getElementById('txtNombreCompleto').value = nombreCompleto || '';
+        document.getElementById('txtEmail').value = '';
+        document.getElementById('txtPassword').value = '';
+        document.getElementById('txtPassword').required = false;
+        document.getElementById('lblPassword').innerHTML = 'Nueva Contraseña (Opcional)';
+        document.getElementById('lblPasswordHelp').classList.remove('d-none');
+        document.getElementById('cboRol').value = idRol.toString();
+        document.getElementById('chkUsuarioActivo').checked = activo;
+
+        // Desmarcar todo mientras se cargan los permisos del usuario
+        aplicarPreset('limpiar');
+
+        try {
+            // Cargar permisos específicos del usuario desde la API
+            const res = await fetch(`/api/autenticacion/usuarios/${idUsuario}/permisos`);
+            if (res.ok) {
+                const permisos = await res.json();
+                permisos.forEach(p => {
+                    const chk = document.getElementById(`chk_perm_${p}`);
+                    if (chk) chk.checked = true;
+                });
+            }
+        } catch (e) {
+            console.error('Error al cargar permisos del usuario:', e);
+        }
+
+        if (modalInstance) modalInstance.show();
+    }
+
+    function alCambiarRol() {
+        const rol = document.getElementById('cboRol').value;
+        if (rol === '1') {
+            aplicarPreset('todos');
+        } else {
+            aplicarPreset('visor');
+        }
+    }
+
+    function aplicarPreset(tipo) {
+        const checkboxes = document.querySelectorAll('.chk-permiso-item');
+        checkboxes.forEach(chk => {
+            const codigo = chk.dataset.codigo;
+            const categoria = chk.dataset.categoria;
+
+            if (tipo === 'todos') {
+                chk.checked = true;
+            } else if (tipo === 'limpiar') {
+                chk.checked = false;
+            } else if (tipo === 'visor') {
+                // Todas las capas, herramientas, funcionalidades básicas, sin módulos admin
+                chk.checked = !codigo.startsWith('MOD_');
+            } else if (tipo === 'campo') {
+                // Solo lotes, coordenadas, medición, GPS
+                chk.checked = ['CAPA_Lotes', 'HERR_GPS', 'HERR_MEDICION_DISTANCIA', 'HERR_MEDICION_AREA', 'HERR_IDENTIFICAR', 'HERR_COORDENADAS', 'HERR_RESTABLECER_VISTA', 'FUNC_CAMBIAR_MAPA_BASE'].includes(codigo);
+            }
+        });
+    }
+
+    function toggleCategoria(categoria) {
+        const checkboxes = document.querySelectorAll(`.chk-permiso-item[data-categoria="${categoria}"]`);
+        checkboxes.forEach(chk => {
+            chk.checked = !chk.checked;
+        });
+    }
+
+    async function guardarUsuario() {
+        const idUsuario = parseInt(document.getElementById('txtIdUsuario').value) || 0;
+        const username = document.getElementById('txtUsername').value.trim();
+        const nombreCompleto = document.getElementById('txtNombreCompleto').value.trim();
+        const email = document.getElementById('txtEmail').value.trim();
+        const password = document.getElementById('txtPassword').value;
+        const idRol = parseInt(document.getElementById('cboRol').value) || 2;
+        const activo = document.getElementById('chkUsuarioActivo').checked;
+
+        if (!username || !nombreCompleto || !email) {
+            alert('Por favor complete todos los campos obligatorios (*).');
+            return;
+        }
+
+        if (idUsuario === 0 && !password) {
+            alert('Debe especificar una contraseña para el nuevo usuario.');
+            return;
+        }
+
+        // Obtener códigos de permisos seleccionados
+        const permisos = [];
+        document.querySelectorAll('.chk-permiso-item:checked').forEach(chk => {
+            permisos.push(chk.dataset.codigo);
+        });
+
+        const btn = document.getElementById('btnGuardarUsuario');
+        btn.disabled = true;
+
+        try {
+            if (idUsuario === 0) {
+                // CREAR USUARIO
+                const payload = {
+                    username,
+                    nombreCompleto,
+                    email,
+                    password,
+                    idRol,
+                    permisos
+                };
+
+                const res = await fetch('/api/autenticacion/usuarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (res.ok && data.exitoso) {
+                    alert(`Usuario '${username}' creado exitosamente con sus permisos configurados.`);
+                    location.reload();
+                } else {
+                    alert(data.mensaje || 'No se pudo crear el usuario.');
+                }
+            } else {
+                // ACTUALIZAR USUARIO Y PERMISOS
+                const payload = {
+                    idUsuario,
+                    nombreCompleto,
+                    email,
+                    idRol,
+                    activo,
+                    passwordNuevo: password || null,
+                    permisos
+                };
+
+                const res = await fetch('/api/autenticacion/usuarios', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (res.ok && data.exitoso) {
+                    alert(`Configuración y permisos del usuario actualizados exitosamente.`);
+                    location.reload();
+                } else {
+                    alert(data.mensaje || 'No se pudo actualizar el usuario.');
+                }
+            }
+        } catch (e) {
+            alert('Error al procesar la solicitud.');
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function toggleEstadoUsuario(id, username, activo) {
+        const accion = activo ? 'desactivar' : 'activar';
+        if (!confirm(`¿Está seguro de ${accion} la cuenta de '${username}'?`)) return;
+
+        try {
+            const res = await fetch(`/api/autenticacion/usuarios/${id}/toggle-estado`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.exitoso) {
+                location.reload();
+            } else {
+                alert(data.mensaje || 'Error al cambiar estado.');
+            }
+        } catch (e) {
+            alert('Error de conexión con el servidor.');
+        }
+    }
+
+    async function eliminarUsuario(id, username) {
+        if (!confirm(`¿Está seguro de ELIMINAR permanentemente al usuario '${username}' y todos sus permisos? Esta acción no se puede deshacer.`)) return;
+
+        try {
+            const res = await fetch(`/api/autenticacion/usuarios/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok && data.exitoso) {
+                alert(`Usuario '${username}' eliminado correctamente.`);
+                location.reload();
+            } else {
+                alert(data.mensaje || 'Error al eliminar usuario.');
+            }
+        } catch (e) {
+            alert('Error de conexión con el servidor.');
+        }
+    }
+
+    async function desbloquearUsuario(id, username) {
+        if (!confirm(`¿Desea desbloquear la cuenta del usuario '${username}'?`)) return;
+        try {
+            const res = await fetch(`/api/autenticacion/usuarios/${id}/desbloquear`, { method: 'POST' });
+            if (res.ok) {
+                alert(`Usuario '${username}' desbloqueado exitosamente.`);
+                location.reload();
+            } else {
+                alert('No se pudo desbloquear el usuario.');
+            }
+        } catch (e) {
+            alert('Error al conectar con el servidor.');
+        }
+    }
+</script>
+}

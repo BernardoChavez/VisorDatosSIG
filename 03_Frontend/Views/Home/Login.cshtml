@@ -1,0 +1,231 @@
+@model VisorDatosSIG.Application.DTOs.Seguridad.LoginRequestDto
+@{
+    ViewData["Title"] = "Acceso Corporativo - VisorDatosSIG 2026";
+    var error = ViewBag.Error as string;
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<div class="sig-auth-split-layout">
+    <!-- COLUMNA IZQUIERDA: Formulario Minimalista y Limpio -->
+    <div class="sig-auth-form-column">
+        <div class="sig-auth-form-container">
+            
+            <!-- Encabezado / Brand Minimalista -->
+            <div class="sig-auth-header mb-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <img src="~/src/logo.jpg" alt="Logo VisorDatosSIG" class="sig-auth-brand-logo-img shadow-sm" asp-append-version="true" />
+                    <div>
+                        <h3 class="fw-bold mb-0 text-slate-900 sig-brand-heading">VisorDatosSIG</h3>
+                        <p class="text-secondary small mb-0">Infraestructura de Datos Espaciales & Catastro</p>
+                    </div>
+                </div>
+                <div class="sig-auth-title-block pt-1">
+                    <h2 class="fw-bold text-slate-900 mb-1" style="font-size: 1.5rem; letter-spacing: -0.02em;">Iniciar Sesión</h2>
+                    <p class="text-muted small mb-0">Ingrese sus credenciales corporativas para acceder al visor cartográfico.</p>
+                </div>
+            </div>
+
+            <!-- Alerta de Notificación / Error -->
+            <div id="pageLoginAlert" class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 mb-3 border-danger-subtle rounded-3 @(string.IsNullOrEmpty(error) ? "d-none" : "")" role="alert">
+                <i class="bi bi-shield-exclamation text-danger fs-5 flex-shrink-0"></i>
+                <div id="pageLoginAlertText" class="small fw-semibold text-danger-emphasis">@error</div>
+            </div>
+
+            <!-- Formulario de Autenticación -->
+            <form id="pageLoginForm" asp-controller="Home" asp-action="Login" asp-route-returnUrl="@returnUrl" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                
+                <div class="mb-3">
+                    <label for="pageLoginUsername" class="form-label text-slate-700 small fw-semibold mb-1">
+                        Nombre de Usuario <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group sig-clean-input-group">
+                        <span class="input-group-text bg-light text-secondary border-end-0">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <input type="text" 
+                               name="Username" 
+                               class="form-control border-start-0 ps-1" 
+                               id="pageLoginUsername" 
+                               value="@Model?.Username" 
+                               placeholder="admin" 
+                               required 
+                               autocomplete="username" 
+                               autofocus />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="pageLoginPassword" class="form-label text-slate-700 small fw-semibold mb-1">
+                        Contraseña <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group sig-clean-input-group">
+                        <span class="input-group-text bg-light text-secondary border-end-0">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password" 
+                               name="Password" 
+                               class="form-control border-start-0 border-end-0 ps-1" 
+                               id="pageLoginPassword" 
+                               placeholder="••••••••••••" 
+                               required 
+                               autocomplete="current-password" />
+                        <button class="btn btn-light border border-start-0 text-secondary sig-btn-pass-toggle" 
+                                type="button" 
+                                id="btnPageTogglePassword" 
+                                title="Mostrar / Ocultar contraseña">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sig-corporate-primary w-100 py-2.5 fw-semibold shadow-sm mb-3" id="btnPageLoginSubmit">
+                    <span class="spinner-border spinner-border-sm d-none me-2" id="pageLoginSpinner" role="status" aria-hidden="true"></span>
+                    <i class="bi bi-box-arrow-in-right me-2" id="pageLoginBtnIcon"></i>
+                    <span id="pageLoginBtnText">Iniciar Sesión</span>
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Solo Animación + Letras Escritas a Mano en Bucle -->
+    <div class="sig-auth-visual-column sig-auth-visual-pure">
+        <div class="sig-visual-backdrop-grid"></div>
+        <div class="sig-visual-glow-sphere"></div>
+
+        <!-- Contenedor Central: Lottie Animation Player -->
+        <div class="sig-visual-pure-wrapper">
+            <lottie-player
+                id="sigLottiePlayer"
+                src="/src/SASSA.json"
+                background="transparent"
+                speed="0.5"
+                loop
+                autoplay
+                class="sig-lottie-player-canvas-clean">
+            </lottie-player>
+
+            <!-- Fallback para lottie-web directo -->
+            <div id="sigLottieFallback" class="sig-lottie-fallback d-none"></div>
+
+            <!-- Efecto de Letras Escritas a Mano (Typewriter / Ink Loop) -->
+            <div class="sig-handwritten-container mt-2 text-center">
+                <span class="sig-handwritten-text" id="handwrittenPhrase"></span><span class="sig-handwritten-cursor">|</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Scripts de Soporte Lottie Player con auto-fallback -->
+    <script src="https://unpkg.com/@@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <!-- Script de Animación de Letras (10 frases, 10s retardo) -->
+    <script src="~/js/login-typewriter.js"></script>
+
+    <script>
+        // Rellenar credenciales para pruebas rápidas
+        function fillCredentials(user, pass) {
+            const userInp = document.getElementById('pageLoginUsername');
+            const passInp = document.getElementById('pageLoginPassword');
+            const alertBox = document.getElementById('pageLoginAlert');
+            
+            if (userInp) userInp.value = user;
+            if (passInp) passInp.value = pass;
+            if (alertBox) alertBox.classList.add('d-none');
+            
+            if (passInp) passInp.focus();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar fallback de Lottie si el Custom Element lottie-player no carga
+            setTimeout(() => {
+                const player = document.getElementById('sigLottiePlayer');
+                const fallback = document.getElementById('sigLottieFallback');
+                if (player && typeof lottie !== 'undefined') {
+                    player.addEventListener('error', () => {
+                        console.warn('Lottie player error, switching to direct lottie-web fallback.');
+                        player.classList.add('d-none');
+                        fallback.classList.remove('d-none');
+                        const anim = lottie.loadAnimation({
+                            container: fallback,
+                            renderer: 'svg',
+                            loop: true,
+                            autoplay: true,
+                            path: '/src/SASSA.json'
+                        });
+                        anim.setSpeed(0.5);
+                    });
+                }
+            }, 800);
+
+            // Toggle de contraseña
+            const btnToggle = document.getElementById('btnPageTogglePassword');
+            const passInput = document.getElementById('pageLoginPassword');
+            if (btnToggle && passInput) {
+                btnToggle.addEventListener('click', () => {
+                    const isPassword = passInput.type === 'password';
+                    passInput.type = isPassword ? 'text' : 'password';
+                    btnToggle.innerHTML = isPassword ? '<i class="bi bi-eye-slash text-primary"></i>' : '<i class="bi bi-eye"></i>';
+                });
+            }
+
+            // Manejo de Envío del Formulario (AJAX + Fallback tradicional)
+            const form = document.getElementById('pageLoginForm');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const alertBox = document.getElementById('pageLoginAlert');
+                    const alertText = document.getElementById('pageLoginAlertText');
+                    const spinner = document.getElementById('pageLoginSpinner');
+                    const btnIcon = document.getElementById('pageLoginBtnIcon');
+                    const btnText = document.getElementById('pageLoginBtnText');
+                    const submitBtn = document.getElementById('btnPageLoginSubmit');
+                    
+                    const username = document.getElementById('pageLoginUsername').value.trim();
+                    const password = document.getElementById('pageLoginPassword').value;
+
+                    if (!username || !password) {
+                        alertText.textContent = 'Por favor ingrese su usuario y contraseña.';
+                        alertBox.classList.remove('d-none');
+                        return;
+                    }
+
+                    alertBox.classList.add('d-none');
+                    spinner.classList.remove('d-none');
+                    btnIcon.classList.add('d-none');
+                    btnText.textContent = 'Verificando credenciales...';
+                    submitBtn.disabled = true;
+
+                    try {
+                        if (typeof AuthService !== 'undefined' && AuthService.login) {
+                            const res = await AuthService.login(username, password);
+                            if (res.success) {
+                                btnText.textContent = 'Acceso Autorizado. Redirigiendo...';
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const returnUrl = urlParams.get('returnUrl') || '/';
+                                window.location.href = returnUrl;
+                                return;
+                            } else {
+                                alertText.textContent = res.message || 'Credenciales incorrectas o cuenta inactiva.';
+                                alertBox.classList.remove('d-none');
+                                spinner.classList.add('d-none');
+                                btnIcon.classList.remove('d-none');
+                                btnText.textContent = 'Ingresar al Sistema SIG';
+                                submitBtn.disabled = false;
+                                return;
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Error en auth asíncrona, enviando vía POST estándar...', err);
+                    }
+
+                    // Fallback a POST MVC estándar
+                    form.submit();
+                });
+            }
+        });
+    </script>
+}

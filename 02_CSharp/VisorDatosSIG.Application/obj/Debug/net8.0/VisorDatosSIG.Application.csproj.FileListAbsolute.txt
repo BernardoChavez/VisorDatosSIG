@@ -1,0 +1,15 @@
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\bin\Debug\net8.0\VisorDatosSIG.Application.deps.json
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\bin\Debug\net8.0\VisorDatosSIG.Application.dll
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\bin\Debug\net8.0\VisorDatosSIG.Application.pdb
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\bin\Debug\net8.0\VisorDatosSIG.Domain.dll
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\bin\Debug\net8.0\VisorDatosSIG.Domain.pdb
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.csproj.AssemblyReference.cache
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.AssemblyInfoInputs.cache
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.AssemblyInfo.cs
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.csproj.CoreCompileInputs.cache
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDat.2C122914.Up2Date
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.dll
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\refint\VisorDatosSIG.Application.dll
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\VisorDatosSIG.Application.pdb
+C:\Users\USER\Documents\clases\SIG\proyecto\02_CSharp\VisorDatosSIG.Application\obj\Debug\net8.0\ref\VisorDatosSIG.Application.dll

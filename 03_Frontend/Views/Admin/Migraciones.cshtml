@@ -1,0 +1,131 @@
+@model List<ResumenMigracionDto>
+@{
+    ViewData["Title"] = "Historial de Migraciones Espaciales";
+}
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4 sig-dashboard-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 sig-dashboard-title"><i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>Historial de Migraciones Espaciales</h3>
+            <p class="text-muted small mb-0">Registro y trazabilidad de cargas masivas de Shapefiles a SQL Server 2022 (SRID 4326).</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i><span>Volver al Visor</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Métricas de Migración -->
+    <div class="row g-2 g-md-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Total Cargas</span>
+                        <h4 class="fw-bold mb-0 text-primary">@(Model?.Count ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-layers-half"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Exitosas</span>
+                        <h4 class="fw-bold mb-0 text-success">@(Model?.Count(m => m.Estado == "Exitoso") ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-check-all"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Registros Procesados</span>
+                        <h4 class="fw-bold mb-0 text-info">@(Model?.Sum(m => m.TotalRegistros) ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-database-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card sig-admin-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Con Incidencias</span>
+                        <h4 class="fw-bold mb-0 text-warning">@(Model?.Count(m => m.RegistrosFallidos > 0 || m.Estado != "Exitoso") ?? 0)</h4>
+                    </div>
+                    <div class="sig-stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card sig-admin-card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle sig-table text-nowrap">
+                    <thead>
+                        <tr>
+                            <th># ID</th>
+                            <th>Fecha Inicio</th>
+                            <th>Usuario</th>
+                            <th>Capa</th>
+                            <th>Archivo</th>
+                            <th>Modalidad</th>
+                            <th>Total</th>
+                            <th>Exitosos</th>
+                            <th>Omitidos</th>
+                            <th>Fallidos</th>
+                            <th>Estado</th>
+                            <th>Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="12" class="text-center py-4 text-muted">No se registran eventos de migración en la base de datos.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var m in Model)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary-subtle text-secondary border">#@m.IdMigracion</span></td>
+                                    <td class="small">@m.FechaInicio.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td><span class="fw-semibold text-primary">@m.Usuario</span></td>
+                                    <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">@m.Capa</span></td>
+                                    <td class="text-truncate" style="max-width: 180px;" title="@m.NombreArchivo">@m.NombreArchivo</td>
+                                    <td><span class="badge @(m.Modalidad == "Reemplazar" ? "bg-warning-subtle text-warning border border-warning-subtle" : "bg-info-subtle text-info border border-info-subtle")">@m.Modalidad</span></td>
+                                    <td class="fw-bold">@m.TotalRegistros</td>
+                                    <td class="text-success fw-bold">@m.RegistrosExitosos</td>
+                                    <td class="text-warning">@m.RegistrosOmitidos</td>
+                                    <td class="text-danger fw-bold">@m.RegistrosFallidos</td>
+                                    <td>
+                                        <span class="badge @(m.Estado == "Exitoso" ? "bg-success-subtle text-success border border-success-subtle" : (m.Estado == "Cancelado" ? "bg-warning-subtle text-warning border border-warning-subtle" : "bg-danger-subtle text-danger border border-danger-subtle"))">
+                                            @m.Estado
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">@(m.DuracionMs.HasValue ? $"{m.DuracionMs} ms" : "-")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

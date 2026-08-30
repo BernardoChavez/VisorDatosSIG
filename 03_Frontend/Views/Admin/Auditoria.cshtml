@@ -1,0 +1,105 @@
+@model BitacoraPaginadaDto
+@{
+    ViewData["Title"] = "Bitácora de Auditoría";
+    var filtro = ViewBag.Filtro as BitacoraFiltroDto ?? new BitacoraFiltroDto();
+}
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4 sig-dashboard-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 sig-dashboard-title"><i class="bi bi-journal-text text-info me-2"></i>Bitácora de Eventos de Auditoría</h3>
+            <p class="text-muted small mb-0">Trazabilidad de seguridad, accesos, consultas espaciales y modificaciones del sistema.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i><span>Volver al Visor</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros de Bitácora -->
+    <div class="card sig-admin-card shadow-sm border-0 mb-4">
+        <div class="card-body p-3">
+            <form method="get" asp-action="Auditoria" class="row g-2 g-md-3 align-items-end">
+                <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label small text-muted mb-1">Tipo de Evento:</label>
+                    <select name="tipoEvento" class="form-select form-select-sm sig-select">
+                        <option value="">Todos los eventos</option>
+                        <option value="LoginExitoso" selected="@(filtro.TipoEvento == "LoginExitoso")">Login Exitoso</option>
+                        <option value="LoginFallido" selected="@(filtro.TipoEvento == "LoginFallido")">Login Fallido</option>
+                        <option value="Migracion" selected="@(filtro.TipoEvento == "Migracion")">Migración</option>
+                        <option value="ConsultaEspacial" selected="@(filtro.TipoEvento == "ConsultaEspacial")">Consulta Espacial</option>
+                        <option value="ModificacionUsuario" selected="@(filtro.TipoEvento == "ModificacionUsuario")">Modificación Usuario</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                    <label class="form-label small text-muted mb-1">Usuario:</label>
+                    <input type="text" name="usuario" value="@filtro.Usuario" class="form-control form-control-sm sig-input" placeholder="Nombre usuario">
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                    <label class="form-label small text-muted mb-1">Fecha Desde:</label>
+                    <input type="datetime-local" name="desde" value="@(filtro.FechaDesde?.ToString("yyyy-MM-ddTHH:mm"))" class="form-control form-control-sm sig-input">
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                    <label class="form-label small text-muted mb-1">Fecha Hasta:</label>
+                    <input type="datetime-local" name="hasta" value="@(filtro.FechaHasta?.ToString("yyyy-MM-ddTHH:mm"))" class="form-control form-control-sm sig-input">
+                </div>
+                <div class="col-12 col-lg-2">
+                    <button type="submit" class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center gap-1">
+                        <i class="bi bi-funnel-fill"></i><span>Filtrar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Eventos -->
+    <div class="card sig-admin-card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle sig-table text-nowrap">
+                    <thead>
+                        <tr>
+                            <th># ID</th>
+                            <th>Fecha y Hora</th>
+                            <th>Usuario</th>
+                            <th>IP Cliente</th>
+                            <th>Tipo Evento</th>
+                            <th>Módulo</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || Model.Items.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">No se encontraron eventos con los filtros aplicados.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var ev in Model.Items)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary-subtle text-secondary border">#@ev.IdBitacora</span></td>
+                                    <td class="small">@ev.FechaHora.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td><span class="fw-semibold text-primary">@(ev.Usuario ?? "Anónimo")</span></td>
+                                    <td><small class="text-muted">@(ev.IpCliente ?? "Local")</small></td>
+                                    <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">@ev.TipoEvento</span></td>
+                                    <td><span class="badge bg-secondary-subtle text-secondary border">@ev.Modulo</span></td>
+                                    <td class="text-truncate" style="max-width: 320px;" title="@ev.Descripcion">@ev.Descripcion</td>
+                                    <td>
+                                        <span class="badge @(ev.Exitoso ? "bg-success-subtle text-success border border-success-subtle" : "bg-danger-subtle text-danger border border-danger-subtle")">
+                                            <i class="bi @(ev.Exitoso ? "bi-check-circle-fill" : "bi-x-circle-fill") me-1"></i>@(ev.Exitoso ? "OK" : "FALLO")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

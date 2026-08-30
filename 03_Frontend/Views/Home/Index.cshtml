@@ -1,0 +1,439 @@
+@{
+    if (User.Identity?.IsAuthenticated != true)
+    {
+        Context.Response.Redirect("/Login");
+    }
+    ViewData["Title"] = "Visor Cartográfico";
+    var catalogo = ViewBag.Capas as List<CapaCatalogoDto> ?? new List<CapaCatalogoDto>();
+    var permisos = ViewBag.Permisos as List<string> ?? new List<string>();
+
+    bool esAdmin = User.IsInRole("Administrador");
+    bool puedeBuscar = esAdmin || permisos.Contains("FUNC_BUSQUEDA_ESPACIAL");
+    bool puedeMedirDistancia = esAdmin || permisos.Contains("HERR_MEDICION_DISTANCIA");
+    bool puedeMedirArea = esAdmin || permisos.Contains("HERR_MEDICION_AREA");
+    bool puedeIdentificar = esAdmin || permisos.Contains("HERR_IDENTIFICAR");
+    bool puedeGps = esAdmin || permisos.Contains("HERR_GPS");
+    bool puedeCoordenadas = esAdmin || permisos.Contains("HERR_COORDENADAS");
+    bool puedeRestablecer = esAdmin || permisos.Contains("HERR_RESTABLECER_VISTA");
+    bool puedeExportarWkt = esAdmin || permisos.Contains("FUNC_EXPORTAR_WKT");
+    bool puedeCambiarMapaBase = esAdmin || permisos.Contains("FUNC_CAMBIAR_MAPA_BASE");
+    bool puedeCambiarTema = esAdmin || permisos.Contains("FUNC_CAMBIAR_TEMA");
+    bool tieneHerramientas = puedeIdentificar || puedeMedirDistancia || puedeMedirArea || puedeGps || puedeCoordenadas || puedeRestablecer;
+}
+
+<div class="sig-viewer-container">
+    <!-- Lienzo del Mapa Leaflet -->
+    <div id="map" class="sig-map-canvas"></div>
+
+    <!-- Backdrop Oscuro para Móvil al abrir Sidebar -->
+    <div class="sig-sidebar-backdrop" id="sigSidebarBackdrop"></div>
+
+    <!-- Sidebar Flotante / Desplegable -->
+    <aside class="sig-sidebar" id="sigSidebar">
+        <!-- Encabezado Sidebar con Pestañas y Botón Cerrar -->
+        <div class="sig-sidebar-header d-flex align-items-center justify-content-between gap-2">
+            <ul class="nav nav-pills sig-nav-pills flex-grow-1" id="sidebarTab" role="tablist">
+                <li class="nav-item flex-fill text-center" role="presentation">
+                    <button class="nav-link active" id="tab-capas-btn" data-bs-toggle="pill" data-bs-target="#tab-capas" type="button" role="tab" title="Capas y Simbología">
+                        <i class="bi bi-layers-fill"></i> <span class="d-none d-lg-inline ms-1">Capas</span>
+                    </button>
+                </li>
+                @if (puedeBuscar)
+                {
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link" id="tab-busqueda-btn" data-bs-toggle="pill" data-bs-target="#tab-busqueda" type="button" role="tab" title="Búsqueda Espacial">
+                            <i class="bi bi-search"></i> <span class="d-none d-lg-inline ms-1">Búsqueda</span>
+                        </button>
+                    </li>
+                }
+                @if (tieneHerramientas)
+                {
+                    <li class="nav-item flex-fill text-center" role="presentation">
+                        <button class="nav-link" id="tab-herramientas-btn" data-bs-toggle="pill" data-bs-target="#tab-herramientas" type="button" role="tab" title="Herramientas SIG">
+                            <i class="bi bi-tools"></i> <span class="d-none d-lg-inline ms-1">Herramientas</span>
+                        </button>
+                    </li>
+                }
+            </ul>
+            <!-- Botón Cerrar Panel para Móvil y Escritorio -->
+            <button class="btn btn-sig-close-sidebar flex-shrink-0" id="btnCloseSidebar" type="button" title="Cerrar panel" aria-label="Cerrar panel">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Contenido de Pestañas del Sidebar -->
+        <div class="sig-sidebar-body tab-content" id="sidebarTabContent">
+            <!-- PESTAÑA 1: Capas y Leyenda -->
+            <div class="tab-pane fade show active p-3" id="tab-capas" role="tabpanel">
+                <!-- Sección Capas Vectoriales -->
+                <div class="sig-section-title">
+                    <i class="bi bi-stack me-1 text-primary"></i> Capas Vectoriales Espaciales
+                    <button class="btn btn-sm btn-outline-secondary float-end py-0 px-1" id="btnReloadAllLayers" title="Recargar capas">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+
+                <div class="sig-layers-list mt-2" id="layersListContainer">
+                    @if (catalogo.Count == 0)
+                    {
+                        <div class="text-center text-muted p-4 border border-dashed rounded">
+                            <i class="bi bi-eye-slash display-6 opacity-50 mb-2"></i>
+                            <p class="small mb-0">No tiene capas cartográficas asignadas. Contacte a su Administrador.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var capa in catalogo)
+                        {
+                            <div class="sig-layer-card" data-layer-name="@capa.Nombre">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                                        <input class="form-check-input sig-layer-toggle" type="checkbox" role="switch" id="chk_@capa.Nombre" data-layer-name="@capa.Nombre" checked>
+                                        <label class="form-check-label fw-semibold" for="chk_@capa.Nombre">
+                                            <span class="sig-color-indicator" style="background-color: @capa.ColorFondo; border-color: @capa.ColorBorde;"></span>
+                                            @capa.Titulo
+                                        </label>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <button class="btn btn-sm btn-outline-secondary sig-btn-zoom-layer py-0 px-1 border-0" data-layer-name="@capa.Nombre" title="Centrar mapa en @capa.Titulo" type="button">
+                                            <i class="bi bi-crosshair"></i>
+                                        </button>
+                                        <span class="badge bg-secondary-subtle text-secondary sig-geom-badge">@capa.TipoGeometria</span>
+                                    </div>
+                                </div>
+
+                                <!-- Control Desplegable de Opacidad -->
+                                <div class="sig-layer-controls mt-2 pt-2 border-top border-dark-subtle">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="small text-muted" style="min-width: 55px;">Opacidad:</span>
+                                        <input type="range" class="form-range sig-opacity-slider" id="op_@capa.Nombre" data-layer-name="@capa.Nombre" min="0" max="100" value="@((int)(capa.Opacidad * 100))">
+                                        <span class="small text-muted sig-opacity-val" id="val_@capa.Nombre">@((int)(capa.Opacidad * 100))%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                @if (puedeCambiarMapaBase)
+                {
+                    <!-- Sección Mapa Base -->
+                    <div class="sig-section-title mt-4">
+                        <i class="bi bi-map me-1 text-info"></i> Capas Base Cartográficas
+                    </div>
+                    <div class="row g-2 mt-1" id="basemapGallery">
+                        <div class="col-6">
+                            <div class="sig-basemap-card active" data-basemap="osm" role="button" onclick="SigMap.setBaseMap('osm')">
+                                <i class="bi bi-globe-americas me-1 text-success"></i>
+                                <span>OpenStreetMap</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="sig-basemap-card" data-basemap="positron" role="button" onclick="SigMap.setBaseMap('positron')">
+                                <i class="bi bi-sun-fill me-1 text-warning"></i>
+                                <span>Carto Positron</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="sig-basemap-card" data-basemap="dark" role="button" onclick="SigMap.setBaseMap('dark')">
+                                <i class="bi bi-moon-stars-fill me-1 text-primary"></i>
+                                <span>Carto Dark</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="sig-basemap-card" data-basemap="satellite" role="button" onclick="SigMap.setBaseMap('satellite')">
+                                <i class="bi bi-camera-fill me-1 text-danger"></i>
+                                <span>Esri Satelital</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (puedeCambiarTema)
+                {
+                    <!-- Selector de Modo de Interfaz (Claro / Oscuro) -->
+                    <div class="sig-section-title mt-4 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-circle-half me-1 text-warning"></i> Modo de Interfaz</span>
+                        <button class="btn btn-xs btn-outline-secondary py-0 px-2 small" type="button" onclick="ThemeService.toggleTheme()">
+                            <i class="bi bi-arrow-repeat me-1"></i>Cambiar
+                        </button>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-6">
+                            <div class="sig-basemap-card" id="btnThemeCardDark" role="button" onclick="ThemeService.setTheme('dark')">
+                                <i class="bi bi-moon-stars-fill text-info me-1"></i>
+                                <span>Modo Oscuro 🌙</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="sig-basemap-card" id="btnThemeCardLight" role="button" onclick="ThemeService.setTheme('light')">
+                                <i class="bi bi-sun-fill text-warning me-1"></i>
+                                <span>Modo Claro ☀️</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (puedeBuscar)
+            {
+                <!-- PESTAÑA 2: Búsqueda Espacial -->
+                <div class="tab-pane fade p-3" id="tab-busqueda" role="tabpanel">
+                    <div class="sig-section-title">
+                        <i class="bi bi-search me-1 text-warning"></i> Búsqueda Alfanumérica y Espacial
+                    </div>
+
+                    <div class="mt-2">
+                        <div class="input-group mb-2">
+                            <input type="text" id="sidebarSearchInput" class="form-control sig-input" placeholder="Buscar predio, vía o código..." autocomplete="off">
+                            <button class="btn btn-outline-secondary" type="button" id="btnClearSearch" title="Limpiar"><i class="bi bi-x-lg"></i></button>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-3">
+                            <select class="form-select form-select-sm sig-select" id="searchLayerFilter">
+                                <option value="">Todas las capas</option>
+                                @foreach (var capa in catalogo)
+                                {
+                                    <option value="@capa.Nombre">@capa.Titulo</option>
+                                }
+                            </select>
+                            <button class="btn btn-sm btn-primary px-3" id="btnExecuteSearch">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de Resultados -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted fw-semibold" id="lblResultsCount">0 resultados encontrados</span>
+                        <button class="btn btn-xs btn-outline-info d-none" id="btnFitSearchResults">
+                            <i class="bi bi-aspect-ratio me-1"></i>Ver todos (Zoom)
+                        </button>
+                    </div>
+
+                    <div class="sig-search-results-container" id="searchResultsList">
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-search display-6 opacity-50 mb-2"></i>
+                            <p class="small mb-0">Ingrese un término para buscar por código de lote, titular, número predial, manzana o nombre de vía.</p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (tieneHerramientas)
+            {
+                <!-- PESTAÑA 3: Herramientas SIG -->
+                <div class="tab-pane fade p-3" id="tab-herramientas" role="tabpanel">
+                    <div class="sig-section-title">
+                        <i class="bi bi-tools me-1 text-success"></i> Herramientas de Interacción Cartográfica
+                    </div>
+
+                    <div class="list-group sig-tools-list mt-2">
+                        @if (puedeIdentificar)
+                        {
+                            <!-- Herramienta Identificar -->
+                            <button type="button" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between active" id="btnToolIdentify">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-info-circle-fill text-primary"></i>
+                                    <div>
+                                        <div class="fw-semibold">Identificar por Clic (Info)</div>
+                                        <small class="text-muted">Consulta atributos de cualquier elemento al hacer clic</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success" id="badgeIdentifyStatus">Activo</span>
+                            </button>
+                        }
+
+                        @if (puedeMedirDistancia)
+                        {
+                            <!-- Herramienta Medir Distancia -->
+                            <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-2 mt-2" id="btnToolMeasureDistance">
+                                <i class="bi bi-rulers text-warning"></i>
+                                <div>
+                                    <div class="fw-semibold">Medir Distancia Lineal</div>
+                                    <small class="text-muted">Haga clics en el mapa para trazar una polilínea</small>
+                                </div>
+                            </button>
+                        }
+
+                        @if (puedeMedirArea)
+                        {
+                            <!-- Herramienta Medir Área -->
+                            <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-2 mt-2" id="btnToolMeasureArea">
+                                <i class="bi bi-bounding-box-circles text-info"></i>
+                                <div>
+                                    <div class="fw-semibold">Medir Área Poligonal</div>
+                                    <small class="text-muted">Calcule áreas en metros cuadrados y hectáreas</small>
+                                </div>
+                            </button>
+                        }
+
+                        @if (puedeGps)
+                        {
+                            <!-- Herramienta Mi Posición Actual -->
+                            <div class="sig-card-tool mt-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="fw-semibold"><i class="bi bi-geo-alt-fill me-1 text-primary"></i> Mi Ubicación Actual (GPS)</div>
+                                    <span class="badge bg-primary-subtle text-primary" id="badgeGpsAccuracy">WGS 84</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center gap-2" id="btnLocateUser">
+                                    <i class="bi bi-crosshair2"></i>
+                                    <span id="btnLocateText">Detectar Mi Ubicación</span>
+                                </button>
+                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                    <i class="bi bi-shield-check me-1"></i>Requiere otorgar permiso de ubicación en el navegador.
+                                </small>
+                            </div>
+                        }
+
+                        @if (puedeCoordenadas)
+                        {
+                            <!-- Localizador de Coordenadas -->
+                            <div class="sig-card-tool mt-3">
+                                <div class="fw-semibold mb-2"><i class="bi bi-crosshair me-1 text-danger"></i> Ir a Coordenadas (WGS 84)</div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="small text-muted">Longitud (X):</label>
+                                        <input type="number" step="0.000001" class="form-control form-control-sm sig-input" id="inputGoToLon" placeholder="-60.969150">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-muted">Latitud (Y):</label>
+                                        <input type="number" step="0.000001" class="form-control form-control-sm sig-input" id="inputGoToLat" placeholder="-16.381980">
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary w-100" id="btnGoToCoords">Centrar Coordenadas</button>
+                            </div>
+                        }
+
+                        @if (puedeRestablecer)
+                        {
+                            <!-- Botón Restablecer Extensión -->
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-secondary w-100 mb-2" id="btnResetView">
+                                    <i class="bi bi-arrows-fullscreen me-1"></i> Restablecer Extensión Inicial (San Ignacio de Velasco)
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </aside>
+
+    <!-- Botón Toggle Sidebar (Móvil / Escritorio) -->
+    <button class="btn btn-sig-toggle-sidebar" id="btnToggleSidebar" title="Ocultar / Mostrar Panel">
+        <i class="bi bi-layout-sidebar-inset"></i>
+    </button>
+
+    <!-- HUD Inferior de Coordenadas y Escala -->
+    <div class="sig-map-hud" id="mapHud">
+        <span id="hudCoords"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Lon: -60.96915 | Lat: -16.38198</span>
+        <span class="sig-hud-divider">|</span>
+        <span id="hudZoom">Zoom: 14</span>
+        <span class="sig-hud-divider">|</span>
+        <span class="sig-badge-crs">EPSG:4326 (WGS 84)</span>
+    </div>
+
+    <!-- Leyenda Flotante -->
+    @if (catalogo.Count > 0)
+    {
+        <div class="sig-floating-legend" id="sigFloatingLegend">
+            <div class="sig-legend-header" id="btnToggleLegend">
+                <span><i class="bi bi-palette-fill me-1 text-warning"></i> Simbología de Capas</span>
+                <i class="bi bi-chevron-down" id="legendChevron"></i>
+            </div>
+            <div class="sig-legend-body" id="legendBody">
+                @foreach (var c in catalogo)
+                {
+                    <div class="sig-legend-item" id="legend_item_@c.Nombre">
+                        <span class="sig-legend-symbol @(c.TipoGeometria == "Point" ? "point" : (c.TipoGeometria == "LineString" ? "line" : "poly"))" 
+                              style="background-color: @c.ColorFondo; border-color: @c.ColorBorde;"></span>
+                        <span class="sig-legend-label">@c.Titulo</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Panel Desplegable de Detalles de Entidad (Info Drawer / Bottom Sheet en Móvil) -->
+    <div class="sig-detail-drawer" id="entityDetailDrawer">
+        <!-- Manija de Arrastre para Móviles -->
+        <div class="sig-drawer-handle d-md-none" id="drawerHandle"></div>
+        <div class="sig-detail-header d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="sig-detail-icon"><i class="bi bi-info-circle-fill"></i></div>
+                <div>
+                    <h6 class="mb-0 fw-bold" id="drawerEntityTitle">Detalle de Entidad</h6>
+                    <small class="text-muted" id="drawerEntitySubtitle">Capa seleccionada</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" id="btnCloseDetailDrawer" aria-label="Cerrar detalle"></button>
+        </div>
+        <div class="sig-detail-body p-3" id="drawerEntityContent">
+            <!-- Contenido dinámico inyectado por JS -->
+        </div>
+        <div class="sig-detail-footer p-2 d-flex justify-content-between border-top border-dark-subtle">
+            <button class="btn btn-sm btn-outline-info" id="btnZoomToEntity">
+                <i class="bi bi-zoom-in me-1"></i>Enfocar Geometría
+            </button>
+            @if (puedeExportarWkt)
+            {
+                <button class="btn btn-sm btn-outline-secondary" id="btnCopyEntityWkt">
+                    <i class="bi bi-clipboard me-1"></i>Copiar WKT
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Barra de Navegación Inferior Flotante Móvil (Mobile Quick Dock) -->
+    <nav class="sig-mobile-dock d-flex d-md-none" id="sigMobileDock" aria-label="Navegación Móvil SIG">
+        <button type="button" class="sig-dock-item" id="dockBtnCapas" onclick="SigMap.openSidebarTab('tab-capas')" title="Capas Espaciales">
+            <i class="bi bi-layers-fill"></i>
+            <span>Capas</span>
+        </button>
+        @if (puedeBuscar)
+        {
+            <button type="button" class="sig-dock-item" id="dockBtnBusqueda" onclick="SigMap.openSidebarTab('tab-busqueda')" title="Búsqueda">
+                <i class="bi bi-search"></i>
+                <span>Buscar</span>
+            </button>
+        }
+        @if (tieneHerramientas)
+        {
+            <button type="button" class="sig-dock-item" id="dockBtnHerramientas" onclick="SigMap.openSidebarTab('tab-herramientas')" title="Herramientas">
+                <i class="bi bi-tools"></i>
+                <span>Herram.</span>
+            </button>
+        }
+        @if (puedeGps)
+        {
+            <button type="button" class="sig-dock-item" id="dockBtnGps" onclick="SigMap.locateUser({ autoZoom: true, showToastMsg: true })" title="Mi Ubicación GPS">
+                <i class="bi bi-crosshair2"></i>
+                <span>GPS</span>
+            </button>
+        }
+        <button type="button" class="sig-dock-item" id="dockBtnLegend" onclick="SigMap.toggleLegend()" title="Simbología">
+            <i class="bi bi-palette-fill"></i>
+            <span>Leyenda</span>
+        </button>
+    </nav>
+</div>
+
+<script>
+    window.SIG_USER_PERMISSIONS = {
+        esAdmin: @(esAdmin ? "true" : "false"),
+        puedeGps: @(puedeGps ? "true" : "false"),
+        puedeMedirDistancia: @(puedeMedirDistancia ? "true" : "false"),
+        puedeMedirArea: @(puedeMedirArea ? "true" : "false"),
+        puedeIdentificar: @(puedeIdentificar ? "true" : "false"),
+        puedeCoordenadas: @(puedeCoordenadas ? "true" : "false"),
+        puedeRestablecer: @(puedeRestablecer ? "true" : "false"),
+        puedeExportarWkt: @(puedeExportarWkt ? "true" : "false"),
+        puedeCambiarMapaBase: @(puedeCambiarMapaBase ? "true" : "false"),
+        puedeBuscar: @(puedeBuscar ? "true" : "false"),
+        permisos: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(permisos))
+    };
+</script>
+
+@section Scripts {
+    <script src="~/js/map.js" asp-append-version="true"></script>
+    <script src="~/js/search.js" asp-append-version="true"></script>
+}
