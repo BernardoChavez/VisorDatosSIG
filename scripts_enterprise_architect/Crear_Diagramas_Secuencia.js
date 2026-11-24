@@ -3,30 +3,19 @@
 /**
  * ==============================================================================
  * SISTEMA: VisorDatosSIG 2026 - UAGRM FICCT
- * SCRIPT: Generador Automático de Diagramas de Secuencia UML
- * MOTOR: Sparx Systems Enterprise Architect (JScript / JavaScript)
- * AUTORES: Bernardo Chávez / Miguel Angel Mendieta
- * ==============================================================================
- * INSTRUCCIONES:
- * 1. Abra Enterprise Architect y su proyecto.
- * 2. Seleccione en el Project Browser el paquete donde desea alojar los diagramas
- *    (por ejemplo: "2.4.3. Diagramas de Secuencia").
- * 3. En Tools -> Scripting, cree un script JScript, pegue este contenido y pulse "Run".
- * 4. EA generará automáticamente el subpaquete con los 9 diagramas de secuencia,
- *    sus Lifelines (Actor, Vista, Controlador, Servicio, Repositorio, Base de Datos)
- *    y todos los mensajes secuenciales sincrónicos y de retorno.
+ * SCRIPT: Generador de Diagramas de Secuencia (Lifelines con Iconos BCE y alt)
  * ==============================================================================
  */
 
 function main() {
     Repository.EnsureOutputVisible("Script");
-    Session.Output(">> Iniciando generación de Diagramas de Secuencia VisorDatosSIG 2026...");
+    Session.Output(">> Generando Diagramas de Secuencia (Con Iconos de Robustez y alt)...");
 
     var targetPackage as EA.Package;
     targetPackage = Repository.GetTreeSelectedPackage();
 
     if (targetPackage == null) {
-        Session.Prompt("Por favor, seleccione un paquete en el Project Browser antes de ejecutar.", promptOK);
+        Session.Prompt("Seleccione un paquete en el Project Browser.", promptOK);
         return;
     }
 
@@ -38,243 +27,279 @@ function main() {
         {
             codigo: "CU01",
             titulo: "CU01 - Gestión de Sesión y Autenticación (Login)",
+            actorNombre: "u: Usuario",
             lifelines: [
-                { nombre: "u: Usuario", tipo: "Actor", pos: 80 },
-                { nombre: "view: LoginView", tipo: "Sequence", pos: 240 },
-                { nombre: "ctrl: AutenticacionController", tipo: "Sequence", pos: 420 },
-                { nombre: "srv: UsuarioService", tipo: "Sequence", pos: 600 },
-                { nombre: "repo: UsuarioRepository", tipo: "Sequence", pos: 780 },
-                { nombre: "db: SQL Server 2022", tipo: "Sequence", pos: 960 }
+                { nombre: "view: LoginView", tipo: "Boundary", pos: 220 },
+                { nombre: "ctrl: AutenticacionController", tipo: "Control", pos: 430 },
+                { nombre: "srv: UsuarioService", tipo: "Control", pos: 640 },
+                { nombre: "ent: Usuario", tipo: "Entity", pos: 850 }
+            ],
+            fragmentos: [
+                { nombre: "alt Credenciales Válidas", cond: "[Credenciales Correctas]", l: 60, r: 960, t: 80, b: 320 },
+                { nombre: "alt Credenciales Inválidas", cond: "[Fallo Contraseña o Bloqueo]", l: 60, r: 960, t: 340, b: 500 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: IngresarCredenciales(user, pass)" },
-                { de: 1, a: 2, texto: "2: PostLogin(loginDto)" },
-                { de: 2, a: 3, texto: "3: AutenticarAsync(user, pass)" },
-                { de: 3, a: 4, texto: "4: ObtenerPorUsernameAsync(user)" },
-                { de: 4, a: 5, texto: "5: SELECT * FROM Usuarios WHERE Username=@u" },
-                { de: 5, a: 4, texto: "6: SqlDataReader (Hash, Salt, Rol)" },
-                { de: 4, a: 3, texto: "7: UsuarioEntity" },
-                { de: 3, a: 3, texto: "8: VerificarPBKDF2(pass, hash, salt)" },
-                { de: 3, a: 2, texto: "9: TokenSesion / ClaimsPrincipal" },
-                { de: 2, a: 1, texto: "10: SignInAsync (HttpOnly Cookie)" },
-                { de: 1, a: 0, texto: "11: Redireccionar a /Home/Index" }
+                { de: -1, a: 0, texto: "1: ingresarCredenciales(user, pass)" },
+                { de: 0, a: 1, texto: "2: POST /api/autenticacion/login" },
+                { de: 1, a: 2, texto: "3: autenticarAsync(user, pass)" },
+                { de: 2, a: 3, texto: "4: buscarPorUsername(user)" },
+                { de: 3, a: 2, texto: "5: retorno(Hash, Salt, Rol)" },
+                { de: 2, a: 2, texto: "6: verificarPBKDF2(pass, Salt)" },
+                { de: 2, a: 1, texto: "7: retorno TokenSesion / Claims" },
+                { de: 1, a: 0, texto: "8: emitirCookie(HttpOnly)" },
+                { de: 0, a: -1, texto: "9: redireccionar a /Home/Index" },
+                // Fragmento invalido
+                { de: 2, a: 1, texto: "10: notificarError('Clave incorrecta')" },
+                { de: 1, a: 0, texto: "11: mostrarAlertaError()" }
             ]
         },
         {
             codigo: "CU06",
             titulo: "CU06 - Validación de Integridad y WGS 84 (SRID 4326)",
+            actorNombre: "op: OperadorMigrador",
             lifelines: [
-                { nombre: "op: OperadorMigrador", tipo: "Actor", pos: 80 },
-                { nombre: "form: MainMigradorForm", tipo: "Sequence", pos: 240 },
-                { nombre: "srv: MigradorService", tipo: "Sequence", pos: 440 },
-                { nombre: "reader: ShapefileReader", tipo: "Sequence", pos: 640 },
-                { nombre: "fs: SistemaArchivos (.prj/.shp)", tipo: "Sequence", pos: 860 }
+                { nombre: "form: MainMigradorForm", tipo: "Boundary", pos: 240 },
+                { nombre: "srv: MigradorService", tipo: "Control", pos: 480 },
+                { nombre: "reader: ShapefileReader", tipo: "Control", pos: 700 },
+                { nombre: "prj: PrjSpatialReference", tipo: "Entity", pos: 920 }
+            ],
+            fragmentos: [
+                { nombre: "alt Validación CRS", cond: "[PRJ contiene EPSG:4326]", l: 60, r: 1020, t: 80, b: 350 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Clic 'Validar Proyección y CRS'" },
-                { de: 1, a: 2, texto: "2: ValidarArchivoShapefileAsync(rutaShp)" },
-                { de: 2, a: 3, texto: "3: InspeccionarPrj(rutaPrj)" },
-                { de: 3, a: 4, texto: "4: File.ReadAllText(rutaPrj)" },
-                { de: 4, a: 3, texto: "5: Contenido WKT Proyección" },
-                { de: 3, a: 3, texto: "6: ParsearWktSpatialReference()" },
-                { de: 3, a: 2, texto: "7: ResultadoValidacion (EsWGS84, SRID=4326)" },
-                { de: 2, a: 1, texto: "8: ValidacionShapefileDto (Estado=Aprobado)" },
-                { de: 1, a: 0, texto: "9: Mostrar indicador verde 'WGS 84 Válido'" }
+                { de: -1, a: 0, texto: "1: pulsar 'Validar Proyección y CRS'" },
+                { de: 0, a: 1, texto: "2: validarArchivoShapefileAsync(ruta)" },
+                { de: 1, a: 2, texto: "3: inspeccionarPrj(rutaPrj)" },
+                { de: 2, a: 3, texto: "4: parsearWktSpatialReference()" },
+                { de: 3, a: 2, texto: "5: retorno (EsWGS84=true, SRID=4326)" },
+                { de: 2, a: 1, texto: "6: retorno ValidacionDto(Aprobado)" },
+                { de: 1, a: 0, texto: "7: habilitar botón 'Iniciar Migración'" },
+                { de: 0, a: -1, texto: "8: mostrar badge verde 'WGS 84 Válido'" }
             ]
         },
         {
             codigo: "CU08",
             titulo: "CU08 - Migración Masiva Transaccional por Lotes",
+            actorNombre: "op: OperadorMigrador",
             lifelines: [
-                { nombre: "op: OperadorMigrador", tipo: "Actor", pos: 80 },
-                { nombre: "form: MainMigradorForm", tipo: "Sequence", pos: 240 },
-                { nombre: "srv: MigradorService", tipo: "Sequence", pos: 430 },
-                { nombre: "repo: MigracionRepository", tipo: "Sequence", pos: 630 },
-                { nombre: "audit: AuditoriaService", tipo: "Sequence", pos: 810 },
-                { nombre: "db: SQL Server 2022 Spatial", tipo: "Sequence", pos: 990 }
+                { nombre: "form: MainMigradorForm", tipo: "Boundary", pos: 220 },
+                { nombre: "srv: MigradorService", tipo: "Control", pos: 440 },
+                { nombre: "batch: BatchProcessor", tipo: "Control", pos: 660 },
+                { nombre: "tx: SqlTransaction", tipo: "Entity", pos: 880 }
+            ],
+            fragmentos: [
+                { nombre: "loop Lotes de 1000", cond: "[Por cada 1000 entidades]", l: 60, r: 980, t: 150, b: 360 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Clic 'Iniciar Migración Masiva'" },
-                { de: 1, a: 2, texto: "2: MigrarCapaAsync(opciones, progreso)" },
-                { de: 2, a: 3, texto: "3: IniciarTransaccionBatch(1000)" },
-                { de: 3, a: 5, texto: "4: BEGIN TRANSACTION" },
-                { de: 2, a: 3, texto: "5: InsertarLoteGeometrias(batch)" },
-                { de: 3, a: 5, texto: "6: BulkInsert / STGeomFromText(wkt, 4326)" },
-                { de: 2, a: 1, texto: "7: IProgress.Report(porcentaje, stats)" },
-                { de: 3, a: 5, texto: "8: COMMIT TRANSACTION" },
-                { de: 2, a: 4, texto: "9: RegistrarMigracionAsync(resumenDto)" },
-                { de: 4, a: 5, texto: "10: INSERT INTO BitacoraEventos" },
-                { de: 2, a: 1, texto: "11: ResumenMigracionDto (Exitoso)" },
-                { de: 1, a: 0, texto: "12: Desplegar diálogo resumen y estadísticas" }
+                { de: -1, a: 0, texto: "1: clic 'Iniciar Migración Masiva'" },
+                { de: 0, a: 1, texto: "2: migrarCapaAsync(opciones)" },
+                { de: 1, a: 3, texto: "3: BEGIN TRANSACTION" },
+                { de: 1, a: 2, texto: "4: insertarLote(batch, SRID=4326)" },
+                { de: 2, a: 3, texto: "5: BulkInsert con STIsValid() = 1" },
+                { de: 1, a: 0, texto: "6: reportarProgreso(porcentaje, stats)" },
+                { de: 1, a: 3, texto: "7: COMMIT TRANSACTION" },
+                { de: 1, a: 0, texto: "8: retorno ResumenMigracionDto" },
+                { de: 0, a: -1, texto: "9: desplegar estadísticas finales" }
             ]
         },
         {
             codigo: "CU11",
-            titulo: "CU11 - Carga de Visor y Consulta GeoJSON Bounding Box",
+            titulo: "CU11 - Carga de Visor y GeoJSON BBox",
+            actorNombre: "c: Consultor",
             lifelines: [
-                { nombre: "c: Consultor", tipo: "Actor", pos: 80 },
-                { nombre: "map: Leaflet.js / SigMap", tipo: "Sequence", pos: 250 },
-                { nombre: "api: CapasApiController", tipo: "Sequence", pos: 450 },
-                { nombre: "srv: CapaService", tipo: "Sequence", pos: 640 },
-                { nombre: "repo: CapaRepository", tipo: "Sequence", pos: 820 },
-                { nombre: "db: SQL Server Spatial", tipo: "Sequence", pos: 1000 }
+                { nombre: "map: LeafletMap", tipo: "Boundary", pos: 230 },
+                { nombre: "api: CapasApiController", tipo: "Control", pos: 460 },
+                { nombre: "srv: CapaService", tipo: "Control", pos: 680 },
+                { nombre: "ent: LotePredio", tipo: "Entity", pos: 900 }
+            ],
+            fragmentos: [
+                { nombre: "alt Consulta Territorial", cond: "[Entidades intersectan BoundingBox]", l: 60, r: 1000, t: 80, b: 380 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Pan / Zoom en el Lienzo" },
-                { de: 1, a: 2, texto: "2: GET /api/capas/geojson?capa=Lotes&bbox=minX,minY,maxX,maxY" },
-                { de: 2, a: 3, texto: "3: ObtenerGeoJsonBBoxAsync(capa, bbox)" },
-                { de: 3, a: 4, texto: "4: ConsultarGeometriasBBox(capa, bboxPoly)" },
-                { de: 4, a: 5, texto: "5: WHERE Geometria.Filter(@bboxGeom) = 1" },
-                { de: 5, a: 4, texto: "6: SqlDataReader (WKT / GeoJson)" },
-                { de: 4, a: 3, texto: "7: Lista Entidades Espaciales" },
-                { de: 3, a: 2, texto: "8: FeatureCollection GeoJSON (RFC 7946)" },
-                { de: 2, a: 1, texto: "9: 200 OK + GeoJSON comprimido (Gzip)" },
-                { de: 1, a: 1, texto: "10: L.geoJSON().addTo(map)" },
-                { de: 1, a: 0, texto: "11: Renderizado dinámico de polígonos y estilos" }
+                { de: -1, a: 0, texto: "1: pan / zoom en el mapa" },
+                { de: 0, a: 1, texto: "2: GET /api/capas/geojson?capa=Lotes&bbox=..." },
+                { de: 1, a: 2, texto: "3: obtenerGeoJsonBBoxAsync(capa, bbox)" },
+                { de: 2, a: 3, texto: "4: SELECT WHERE Geometria.Filter(bbox) = 1" },
+                { de: 3, a: 2, texto: "5: retorno SqlDataReader (WKT)" },
+                { de: 2, a: 1, texto: "6: serializar FeatureCollection (Gzip)" },
+                { de: 1, a: 0, texto: "7: 200 OK (GeoJSON RFC 7946)" },
+                { de: 0, a: 0, texto: "8: L.geoJSON().addTo(map)" },
+                { de: 0, a: -1, texto: "9: renderizado vectorial con estilos" }
             ]
         },
         {
             codigo: "CU13",
-            titulo: "CU13 - Identificación por Clic / Toque y Consulta de Atributos",
+            titulo: "CU13 - Identificación por Clic / Toque",
+            actorNombre: "c: Consultor",
             lifelines: [
-                { nombre: "c: Consultor", tipo: "Actor", pos: 80 },
-                { nombre: "map: LeafletMap", tipo: "Sequence", pos: 250 },
-                { nombre: "drawer: EntityDetailDrawer", tipo: "Sequence", pos: 430 },
-                { nombre: "api: CapasApiController", tipo: "Sequence", pos: 620 },
-                { nombre: "repo: CapaRepository", tipo: "Sequence", pos: 820 },
-                { nombre: "db: SQL Server Spatial", tipo: "Sequence", pos: 1010 }
+                { nombre: "map: LeafletMap", tipo: "Boundary", pos: 220 },
+                { nombre: "drawer: EntityDrawer", tipo: "Boundary", pos: 430 },
+                { nombre: "api: CapasApiController", tipo: "Control", pos: 650 },
+                { nombre: "ent: LotePredio", tipo: "Entity", pos: 870 }
+            ],
+            fragmentos: [
+                { nombre: "alt Predio Encontrado", cond: "[Intersects(Point) == 1]", l: 60, r: 970, t: 80, b: 350 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Clic sobre predio (lat, lon)" },
-                { de: 1, a: 3, texto: "2: GET /api/capas/identificar?lat=Y&lon=X&tol=0.0001" },
-                { de: 3, a: 4, texto: "3: IdentificarEntidadAsync(lat, lon)" },
-                { de: 4, a: 5, texto: "4: WHERE Geometria.STIntersects(Point) = 1" },
-                { de: 5, a: 4, texto: "5: Datos Atributos Prediales" },
-                { de: 4, a: 3, texto: "6: FichaPredialDto" },
-                { de: 3, a: 1, texto: "7: 200 OK (Atributos + WKT)" },
-                { de: 1, a: 1, texto: "8: Resaltar polígono (stroke cian)" },
-                { de: 1, a: 2, texto: "9: Abrir panel y renderizar ficha técnica" },
-                { de: 2, a: 0, texto: "10: Visualización de datos (Área, Titular, Código)" }
+                { de: -1, a: 0, texto: "1: clic en geometría (lat, lon)" },
+                { de: 0, a: 2, texto: "2: GET /api/capas/identificar?lat=Y&lon=X" },
+                { de: 2, a: 3, texto: "3: STIntersects(Point, Geometria)" },
+                { de: 3, a: 2, texto: "4: retorno Atributos Catastrales" },
+                { de: 2, a: 0, texto: "5: 200 OK (FichaPredialDto + WKT)" },
+                { de: 0, a: 0, texto: "6: resaltar polígono (stroke cian)" },
+                { de: 0, a: 1, texto: "7: abrir panel y cargar datos" },
+                { de: 1, a: -1, texto: "8: visualización de titular, área y código" }
             ]
         },
         {
             codigo: "CU14",
-            titulo: "CU14 - Búsqueda Alfanumérica Predictiva y Enfoque en Mapa",
+            titulo: "CU14 - Búsqueda Predictiva Multicriterio",
+            actorNombre: "c: Consultor",
             lifelines: [
-                { nombre: "c: Consultor", tipo: "Actor", pos: 80 },
-                { nombre: "ui: SearchBar / Sidebar", tipo: "Sequence", pos: 250 },
-                { nombre: "api: BusquedaApiController", tipo: "Sequence", pos: 460 },
-                { nombre: "srv: BusquedaService", tipo: "Sequence", pos: 670 },
-                { nombre: "repo: BusquedaRepository", tipo: "Sequence", pos: 870 },
-                { nombre: "map: LeafletMap", tipo: "Sequence", pos: 1050 }
+                { nombre: "sb: SearchBar", tipo: "Boundary", pos: 230 },
+                { nombre: "api: BusquedaApiController", tipo: "Control", pos: 460 },
+                { nombre: "srv: BusquedaService", tipo: "Control", pos: 680 },
+                { nombre: "map: LeafletMap", tipo: "Boundary", pos: 900 }
+            ],
+            fragmentos: [
+                { nombre: "alt Resultados", cond: "[Coincidencias > 0]", l: 60, r: 1000, t: 80, b: 380 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Escribir término (ej. 'M-12' o titular)" },
-                { de: 1, a: 2, texto: "2: GET /api/busqueda/rapida?q=termino&capa=Lotes" },
-                { de: 2, a: 3, texto: "3: BuscarAsync(query, capa)" },
-                { de: 3, a: 4, texto: "4: ConsultarIndicesTextoYCodigos(query)" },
-                { de: 4, a: 3, texto: "5: Lista de Coincidencias" },
-                { de: 3, a: 2, texto: "6: List<ResultadoBusquedaDto>" },
-                { de: 2, a: 1, texto: "7: Renderizar lista de resultados en sidebar" },
-                { de: 0, a: 1, texto: "8: Seleccionar ítem de la lista" },
-                { de: 1, a: 5, texto: "9: fitBounds(bboxGeometria) + highlight()" },
-                { de: 5, a: 0, texto: "10: Zoom suave y enfoque centrado del predio" }
+                { de: -1, a: 0, texto: "1: escribir término (ej. 'M-12' o titular)" },
+                { de: 0, a: 1, texto: "2: GET /api/busqueda/rapida?q=termino" },
+                { de: 1, a: 2, texto: "3: buscarAsync(query, capa)" },
+                { de: 2, a: 1, texto: "4: retorno List<ResultadoBusquedaDto>" },
+                { de: 1, a: 0, texto: "5: 200 OK desplegar lista en sidebar" },
+                { de: -1, a: 0, texto: "6: seleccionar predio de la lista" },
+                { de: 0, a: 3, texto: "7: fitBounds(bbox) + highlight()" },
+                { de: 3, a: -1, texto: "8: zoom suave y enfoque centrado" }
             ]
         },
         {
             codigo: "CU15",
-            titulo: "CU15 - Medición Cartográfica (Distancia Lineal y Área)",
+            titulo: "CU15 - Medición Cartográfica (Distancia y Área)",
+            actorNombre: "c: Consultor",
             lifelines: [
-                { nombre: "c: Consultor", tipo: "Actor", pos: 80 },
-                { nombre: "tools: PanelHerramientas", tipo: "Sequence", pos: 260 },
-                { nombre: "measure: MeasurementEngine (JS)", tipo: "Sequence", pos: 480 },
-                { nombre: "map: LeafletMapCanvas", tipo: "Sequence", pos: 700 }
+                { nombre: "ph: PanelHerramientas", tipo: "Boundary", pos: 230 },
+                { nombre: "engine: MeasurementEngine", tipo: "Control", pos: 470 },
+                { nombre: "map: LeafletMap", tipo: "Boundary", pos: 710 }
+            ],
+            fragmentos: [
+                { nombre: "loop Clics Vértices", cond: "[Hasta doble clic]", l: 60, r: 850, t: 120, b: 320 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Clic 'Medir Distancia' o 'Medir Área'" },
-                { de: 1, a: 2, texto: "2: ActivarModoMedicion(tipo)" },
-                { de: 2, a: 3, texto: "3: Cambiar cursor a Crosshair" },
-                { de: 0, a: 3, texto: "4: Clics sucesivos en vértices" },
-                { de: 3, a: 2, texto: "5: Evento map.click(latlng)" },
-                { de: 2, a: 2, texto: "6: CalcularFormulaGeodesicaHaversine()" },
-                { de: 2, a: 3, texto: "7: Trazar línea guía / polígono sombreado" },
-                { de: 2, a: 3, texto: "8: Actualizar Tooltip emergente (m, km, m2, ha)" },
-                { de: 0, a: 3, texto: "9: Doble clic para finalizar" },
-                { de: 2, a: 0, texto: "10: Muestra resultado total fijado en pantalla" }
+                { de: -1, a: 0, texto: "1: clic 'Medir Distancia' o 'Medir Área'" },
+                { de: 0, a: 1, texto: "2: activarModoMedicion(tipo)" },
+                { de: 1, a: 2, texto: "3: cambiar cursor a Crosshair" },
+                { de: -1, a: 2, texto: "4: clics sucesivos en mapa" },
+                { de: 2, a: 1, texto: "5: map.click(latlng)" },
+                { de: 1, a: 1, texto: "6: calcularFormulaGeodesicaHaversine()" },
+                { de: 1, a: 2, texto: "7: actualizarTooltip(m, km, m2, ha)" },
+                { de: -1, a: 2, texto: "8: doble clic finaliza trazado" },
+                { de: 1, a: -1, texto: "9: fijar resultado métrico en pantalla" }
             ]
         },
         {
             codigo: "CU16",
-            titulo: "CU16 - Geolocalización GPS y Navegación por Coordenadas",
+            titulo: "CU16 - Geolocalización GPS y Coordenadas",
+            actorNombre: "u: Usuario / Operario",
             lifelines: [
-                { nombre: "c: Usuario / Operario", tipo: "Actor", pos: 80 },
-                { nombre: "ui: ControlesGpsHUD", tipo: "Sequence", pos: 260 },
-                { nombre: "gps: GeolocationAPI / FlutterLocation", tipo: "Sequence", pos: 490 },
-                { nombre: "map: LeafletMap", tipo: "Sequence", pos: 730 },
-                { nombre: "hud: MapHUD (Coordenadas)", tipo: "Sequence", pos: 940 }
+                { nombre: "hud: ControlesHUD", tipo: "Boundary", pos: 230 },
+                { nombre: "gps: GeolocationService", tipo: "Control", pos: 480 },
+                { nombre: "map: LeafletMap", tipo: "Boundary", pos: 720 }
+            ],
+            fragmentos: [
+                { nombre: "alt Permiso Concedido", cond: "[Permiso GPS Otorgado]", l: 60, r: 850, t: 80, b: 320 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Pulsar 'Detectar Mi Ubicación' o 'Ir a Coords'" },
-                { de: 1, a: 2, texto: "2: getCurrentPosition(highAccuracy: true)" },
-                { de: 2, a: 1, texto: "3: Retorna Position (lat, lon, accuracy)" },
-                { de: 1, a: 3, texto: "4: setView([lat, lon], 17)" },
-                { de: 1, a: 3, texto: "5: Agregar L.circleMarker (punto azul pulsante)" },
-                { de: 1, a: 4, texto: "6: ActualizarHUD(lat, lon, EPSG:4326)" },
-                { de: 3, a: 0, texto: "7: Visualización de ubicación en tiempo real" }
+                { de: -1, a: 0, texto: "1: pulsar 'Detectar Mi Ubicación'" },
+                { de: 0, a: 1, texto: "2: getCurrentPosition(highAccuracy)" },
+                { de: 1, a: 0, texto: "3: retorno Position(lat, lon, accuracy)" },
+                { de: 0, a: 2, texto: "4: setView([lat, lon], 17)" },
+                { de: 0, a: 2, texto: "5: agregar L.circleMarker pulsante" },
+                { de: 0, a: -1, texto: "6: actualizar HUD: 'EPSG:4326'" }
             ]
         },
         {
             codigo: "CU17",
-            titulo: "CU17 - Exportación de Información (Logs y Geometría WKT)",
+            titulo: "CU17 - Exportación de Información (Logs y WKT)",
+            actorNombre: "u: Consultor / Admin",
             lifelines: [
-                { nombre: "u: Consultor / Admin", tipo: "Actor", pos: 80 },
-                { nombre: "ui: Drawer / AuditoriaView", tipo: "Sequence", pos: 260 },
-                { nombre: "ctrl: ExportController / AdminController", tipo: "Sequence", pos: 490 },
-                { nombre: "srv: AuditoriaService", tipo: "Sequence", pos: 710 },
-                { nombre: "repo: BitacoraRepository", tipo: "Sequence", pos: 920 }
+                { nombre: "ui: AuditoriaView", tipo: "Boundary", pos: 230 },
+                { nombre: "ctrl: ExportController", tipo: "Control", pos: 480 },
+                { nombre: "srv: AuditoriaService", tipo: "Control", pos: 720 }
+            ],
+            fragmentos: [
+                { nombre: "alt Formato Solicitado", cond: "[Descarga CSV]", l: 60, r: 850, t: 80, b: 300 }
             ],
             mensajes: [
-                { de: 0, a: 1, texto: "1: Clic 'Exportar CSV' o 'Copiar WKT'" },
-                { de: 1, a: 2, texto: "2: SolicitudExportacion(filtros / idEntidad)" },
-                { de: 2, a: 3, texto: "3: ExportarRegistrosCsvAsync(filtros)" },
-                { de: 3, a: 4, texto: "4: ConsultarEventosAuditoria(filtros)" },
-                { de: 4, a: 3, texto: "5: List<BitacoraDto>" },
-                { de: 3, a: 3, texto: "6: SerializarStringWriterCSV(UTF8)" },
-                { de: 3, a: 2, texto: "7: FileContentResult (text/csv)" },
-                { de: 2, a: 1, texto: "8: Descarga de archivo 'Auditoria_SIG_2026.csv'" },
-                { de: 1, a: 0, texto: "9: Notificación de descarga o copiado en portapapeles" }
+                { de: -1, a: 0, texto: "1: clic 'Exportar CSV' o 'Copiar WKT'" },
+                { de: 0, a: 1, texto: "2: generarExportacion(filtros)" },
+                { de: 1, a: 2, texto: "3: exportarRegistrosCsvAsync()" },
+                { de: 2, a: 1, texto: "4: retorno FileContentResult (UTF8)" },
+                { de: 1, a: 0, texto: "5: descarga 'Auditoria_SIG.csv'" },
+                { de: 0, a: -1, texto: "6: confirmación de archivo descargado" }
             ]
         }
     ];
 
     for (var i = 0; i < diagramas.length; i++) {
         var d = diagramas[i];
-        Session.Output("-> Creando diagrama de secuencia para: " + d.codigo);
+        Session.Output("-> Diagrama de Secuencia: " + d.codigo);
 
         var diag as EA.Diagram;
         diag = pkgSec.Diagrams.AddNew(d.titulo, "Sequence");
         diag.Update();
 
-        var elemList = [];
-        for (var l = 0; l < d.lifelines.length; l++) {
-            var lf = d.lifelines[l];
-            var elem as EA.Element;
-            elem = pkgSec.Elements.AddNew(lf.nombre, lf.tipo);
-            elem.Update();
-            elemList.push(elem);
+        // 1. Crear el Actor
+        var elActor as EA.Element;
+        elActor = pkgSec.Elements.AddNew(d.actorNombre, "Actor");
+        elActor.Update();
+        addObj(diag, elActor, 60, 50, 160, 550);
 
-            // Posicionar Lifeline en el diagrama
-            var diagObj as EA.DiagramObject;
-            diagObj = diag.DiagramObjects.AddNew("l=" + lf.pos + ";r=" + (lf.pos + 110) + ";t=50;b=600;", "");
-            diagObj.ElementID = elem.ElementID;
-            diagObj.Update();
+        var lifelinesList = [];
+        lifelinesList.push(elActor);
+
+        // 2. Crear las Lifelines con Clasificador de Robustez (para que dibuje el icono BCE arriba)
+        for (var l = 0; l < d.lifelines.length; l++) {
+            var item = d.lifelines[l];
+
+            // Crear el clasificador de robustez
+            var clasificador as EA.Element;
+            clasificador = pkgSec.Elements.AddNew(item.nombre.split(":")[1].trim(), item.tipo);
+            clasificador.Stereotype = item.tipo.toLowerCase();
+            clasificador.Update();
+
+            // Crear la Lifeline
+            var lf as EA.Element;
+            lf = pkgSec.Elements.AddNew(item.nombre, "Sequence");
+            lf.ClassifierID = clasificador.ElementID; // <-- Asocia el clasificador para mostrar icono BCE
+            lf.Update();
+
+            addObj(diag, lf, item.pos, 50, item.pos + 120, 550);
+            lifelinesList.push(lf);
         }
 
-        // Crear los mensajes de secuencia
+        // 3. Crear fragmentos combinados (alt / loop)
+        for (var f = 0; f < d.fragmentos.length; f++) {
+            var fr = d.fragmentos[f];
+            var fragElem as EA.Element;
+            fragElem = pkgSec.Elements.AddNew(fr.nombre, "InteractionFragment");
+            fragElem.Subtype = 0; // CombinedFragment
+            fragElem.Stereotype = fr.nombre.startsWith("loop") ? "loop" : "alt";
+            fragElem.Update();
+
+            addObj(diag, fragElem, fr.l, fr.t, fr.r, fr.b);
+        }
+
+        // 4. Crear los mensajes
         for (var m = 0; m < d.mensajes.length; m++) {
             var msgData = d.mensajes[m];
-            var src = elemList[msgData.de];
-            var tgt = elemList[msgData.a];
+            var idxDe = msgData.de + 1; // -1 corresponde a Actor (idx 0)
+            var idxA = msgData.a + 1;
+
+            var src = lifelinesList[idxDe];
+            var tgt = lifelinesList[idxA];
 
             var conn as EA.Connector;
             conn = src.Connectors.AddNew(msgData.texto, "Sequence");
@@ -288,8 +313,14 @@ function main() {
 
     pkgSec.Update();
     Repository.RefreshModelView(pkgSec.PackageID);
-    Session.Output(">> ¡Generación de Diagramas de Secuencia finalizada con éxito!");
-    Session.Prompt("Se crearon exitosamente los 9 Diagramas de Secuencia en el paquete seleccionado.", promptOK);
+    Session.Output(">> ¡Diagramas de Secuencia completados!");
+}
+
+function addObj(diag, elem, l, t, r, b) {
+    var o as EA.DiagramObject;
+    o = diag.DiagramObjects.AddNew("l=" + l + ";r=" + r + ";t=" + t + ";b=" + b + ";", "");
+    o.ElementID = elem.ElementID;
+    o.Update();
 }
 
 main();

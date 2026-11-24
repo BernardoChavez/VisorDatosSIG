@@ -1,388 +1,692 @@
-@startuml Diagramas_VisorDatosSIG_2026
+@startuml Diagramas_VisorDatosSIG_2026_Refinados
 ' ==============================================================================
 ' SISTEMA: VisorDatosSIG 2026 - UAGRM FICCT
-' ESPECIFICACIÓN: Colección Completa de Diagramas de Comunicación y Secuencia
+' ESPECIFICACIÓN EXACTA BASADA EN EL FORMATO SOLICITADO
 ' ==============================================================================
 
+skinparam backgroundColor #FDFDFD
+skinparam defaultFontName "Arial"
+skinparam roundCorner 10
+
 ' ==============================================================================
-' 1. DIAGRAMAS DE COMUNICACIÓN (ROBUSTNESS / BCE)
+' 1. DIAGRAMAS DE COMUNICACIÓN (ESTILO ROBUSTEZ BCE - IMAGEN 1)
 ' ==============================================================================
 
-newpage CU01 - Diagrama de Comunicación: Gestión de Sesión y Autenticación
+newpage 2.3.2.1. CU01 - Diagrama de Comunicación: Gestión de Sesión
 skinparam actorStyle awesome
-actor "Usuario / Admin" as act1
-boundary "LoginView\n(Login.cshtml)" as bnd1
-control "AutenticacionController" as ctrl1
-entity "Usuario\n(Hash PBKDF2 + Salt)" as ent1
+actor "Usuario /\nAdministrador" as act1
+boundary "LoginView\n(Login.cshtml)" as bnd1 #E8F8F5
+control "AutenticacionController" as ctrl1 #EBF5FB
+entity "Usuario\n(Credenciales)" as ent1 #FEF9E7
 
-act1 - bnd1 : 1: IngresarCredenciales(user, pass) >\n6: RedireccionarAlVisor() <
-bnd1 - ctrl1 : 2: PostLogin(dto) >\n5: EmitirCookieSesion() <
-ctrl1 - ent1 : 3: BuscarPorUsername() >\n4: RetornarHashYSalt() <
+act1 -- bnd1 : 1.1: ingresarCredenciales(user, pass) >\n1.7: <- redireccionarAlVisor()
+bnd1 -- ctrl1 : 1.2: validarCredenciales(dto) >\n1.6: <- emitirCookieSesion(Claims)
+ctrl1 -- ent1 : 1.3: -> buscarPorUsername(user)\n1.4: <- retornarHashYSalt(salt, hash)
+ctrl1 -- ctrl1 : 1.5: verificarPBKDF2(pass, hash)
 
-newpage CU02 - Diagrama de Comunicación: Gestión de Usuarios y Permisos PBAC
+newpage 2.3.2.2. CU02 - Diagrama de Comunicación: Gestión de Usuarios y Permisos
 actor "Administrador" as act2
-boundary "UsuariosAdminView\n(Usuarios.cshtml)" as bnd2
-control "AdminController /\nUsuarioService" as ctrl2
-entity "Usuario &\nUsuarioPermisos (PBAC)" as ent2
+boundary "UI_GestionUsuarios" as bnd2 #E8F8F5
+control "AdminController" as ctrl2 #EBF5FB
+entity "UsuarioPermiso\n(PBAC)" as ent2 #FEF9E7
 
-act2 - bnd2 : 1: SolicitarListaYPermisos() >
-bnd2 - ctrl2 : 2: ObtenerUsuariosYPermisos() >\n4: GuardarPermisosUsuario() >
-ctrl2 - ent2 : 3: ConsultarCatalogoPermisos() >\n5: ActualizarPermisosPBAC() >
+act2 -- bnd2 : 1.1: solicitarListaUsuarios() >
+bnd2 -- ctrl2 : 1.2: obtenerUsuariosYPermisos() >\n2.1: guardarPermisos(id, lista) >
+ctrl2 -- ent2 : 1.3: -> consultarPermisosPBAC(id)\n2.2: UPDATE UsuarioPermisos ->
+ctrl2 -- bnd2 : 2.3: <- notificarExito()
 
-newpage CU05 - Diagrama de Comunicación: Seleccionar e Inspeccionar Shapefiles
+newpage 2.3.2.3. CU05 - Diagrama de Comunicación: Inspección de Shapefiles
 actor "Operador Migrador" as act5
-boundary "MainMigradorForm\n(WinForms UI)" as bnd5
-control "MigradorService" as ctrl5
-entity "ShapefileHeader &\nDBFTable" as ent5
+boundary "UI_MainMigradorForm" as bnd5 #E8F8F5
+control "MigradorService" as ctrl5 #EBF5FB
+entity "ShapefileHeader" as ent5 #FEF9E7
 
-act5 - bnd5 : 1: SeleccionarDirectorio() >
-bnd5 - ctrl5 : 2: EscanearArchivosShapefile() >
-ctrl5 - ent5 : 3: LeerCabeceraShpYAtributosDbf() >\n4: RetornarMetadatosYConteo() <
-ctrl5 - bnd5 : 5: PoblarTablaCapasDetectadas() <
+act5 -- bnd5 : 1.1: seleccionarRutaDirectorio() >
+bnd5 -- ctrl5 : 1.2: escanearShapefiles(ruta) >
+ctrl5 -- ent5 : 1.3: -> leerCabeceraShpYAtributosDbf()\n1.4: <- retornarMetadatos(conteo, bbox)
+ctrl5 -- bnd5 : 1.5: <- poblarTablaCapasDetectadas()
 
-newpage CU06 - Diagrama de Comunicación: Validar Integridad y WGS 84
+newpage 2.3.2.4. CU06 - Diagrama de Comunicación: Validación WGS 84
 actor "Operador Migrador" as act6
-boundary "MainMigradorForm\n(Vista Previa)" as bnd6
-control "MigradorService /\nShapefileReader" as ctrl6
-entity "PrjSpatialReference\n(EPSG:4326)" as ent6
+boundary "UI_MainMigradorForm" as bnd6 #E8F8F5
+control "ShapefileReader" as ctrl6 #EBF5FB
+entity "PrjSpatialReference" as ent6 #FEF9E7
 
-act6 - bnd6 : 1: PulsarValidarProyeccion() >
-bnd6 - ctrl6 : 2: ValidarIntegridadPrj() >
-ctrl6 - ent6 : 3: VerificarCRS_WGS84() >\n4: ConfirmarSRID4326Valido() <
-ctrl6 - bnd6 : 5: HabilitarBotonMigracion() <
+act6 -- bnd6 : 1.1: pulsarValidarProyeccion() >
+bnd6 -- ctrl6 : 1.2: validarIntegridadPrj(ruta) >
+ctrl6 -- ent6 : 1.3: -> parsearWKT_PRJ()\n1.4: <- confirmarSRID4326(WGS84)
+ctrl6 -- bnd6 : 1.5: <- habilitarBotonMigracion()
 
-newpage CU08 - Diagrama de Comunicación: Migración Masiva Transaccional
+newpage 2.3.2.5. CU08 - Diagrama de Comunicación: Migración Masiva Transaccional
 actor "Operador Migrador" as act8
-boundary "MainMigradorForm\n(Barra Progreso)" as bnd8
-control "MigradorService /\nBatchProcessor" as ctrl8
-entity "SqlTransaction &\nCapaGeometria" as ent8
+boundary "UI_MainMigradorForm" as bnd8 #E8F8F5
+control "BatchProcessor" as ctrl8 #EBF5FB
+entity "SqlTransaction" as ent8 #FEF9E7
 
-act8 - bnd8 : 1: IniciarMigracion(modalidad) >
-bnd8 - ctrl8 : 2: EjecutarMigracionPorLotes(1000) >\n5: ReportarProgresoYBitacora() <
-ctrl8 - ent8 : 3: IniciarTransaccionSQL() >\n4: InsertarLoteConSTIsValid() >
+act8 -- bnd8 : 1.1: iniciarMigracion(modalidad) >
+bnd8 -- ctrl8 : 1.2: ejecutarMigracionLotes(1000) >
+ctrl8 -- ent8 : 1.3: BEGIN TRANSACTION ->\n1.4: INSERT Bulk STIsValid() ->\n1.5: COMMIT TRANSACTION ->
+ctrl8 -- bnd8 : 1.6: <- reportarProgresoYBitacora()
 
-newpage CU11 - Diagrama de Comunicación: Visualizar Mapa Base y Capas
+newpage 2.3.2.6. CU11 - Diagrama de Comunicación: Visualización de Capas
 actor "Consultor" as act11
-boundary "VisorMapView\n(Leaflet Canvas)" as bnd11
-control "CapasApiController /\nCapaService" as ctrl11
-entity "CatalogoCapas &\nGeoJsonBBox" as ent11
+boundary "UI_VisorLeafletMap" as bnd11 #E8F8F5
+control "CapasApiController" as ctrl11 #EBF5FB
+entity "CatalogoCapas" as ent11 #FEF9E7
 
-act11 - bnd11 : 1: ConmutarCapa(nombre, visible) >\n5: ActualizarLeyendaSimbologia() <
-bnd11 - ctrl11 : 2: GetGeoJsonBBox(bbox, capa) >\n4: RenderizarVectoresEnLienzo() <
-ctrl11 - ent11 : 3: ConsultarEntidadesBBox() >
+act11 -- bnd11 : 1.1: conmutarCapa(nombre, visible) >\n1.6: <- actualizarLeyendaSimbologia()
+bnd11 -- ctrl11 : 1.2: getGeoJsonBBox(bbox, capa) >\n1.5: <- renderizarVectoresEnLienzo()
+ctrl11 -- ent11 : 1.3: -> consultarEntidadesBBox()\n1.4: <- retornarFeatureCollectionGeoJSON()
 
-newpage CU13 - Diagrama de Comunicación: Identificar Entidades por Clic
+newpage 2.3.2.7. CU13 - Diagrama de Comunicación: Identificación por Clic
 actor "Consultor" as act13
-boundary "VisorMapView &\nEntityDetailDrawer" as bnd13
-control "CapasApiController /\nSpatialEngine" as ctrl13
-entity "Lote / Manzana /\nConexionAgua" as ent13
+boundary "UI_EntityDrawer" as bnd13 #E8F8F5
+control "SpatialEngine" as ctrl13 #EBF5FB
+entity "LotePredio" as ent13 #FEF9E7
 
-act13 - bnd13 : 1: ClicEnGeometria(lat, lon) >
-bnd13 - ctrl13 : 2: IdentificarPunto(lat, lon) >\n4: ResaltarGeometriaYCargarDrawer() <
-ctrl13 - ent13 : 3: STIntersects(Point, Geometria) >
+act13 -- bnd13 : 1.1: clicEnGeometria(lat, lon) >
+bnd13 -- ctrl13 : 1.2: identificarPunto(lat, lon, tol) >\n1.5: <- resaltarGeometriaYCargarDrawer()
+ctrl13 -- ent13 : 1.3: -> STIntersects(Point, Geometria)\n1.4: <- retornarFichaPredialAtributos()
 
-newpage CU14 - Diagrama de Comunicación: Búsqueda Predictiva Multicriterio
+newpage 2.3.2.8. CU14 - Diagrama de Comunicación: Búsqueda Predictiva Multicriterio
 actor "Consultor" as act14
-boundary "VisorMapView\n(Sidebar Buscador)" as bnd14
-control "BusquedaApiController /\nBusquedaService" as ctrl14
-entity "Lotes & Vias\n(Indices Texto)" as ent14
+boundary "UI_SearchBar" as bnd14 #E8F8F5
+control "BusquedaApiController" as ctrl14 #EBF5FB
+entity "IndiceTextoPredial" as ent14 #FEF9E7
 
-act14 - bnd14 : 1: IngresarTextoBusqueda(q, capa) >
-bnd14 - ctrl14 : 2: BuscarElementos(criterio) >\n4: MostrarResultadosYZoomGeometria() <
-ctrl14 - ent14 : 3: ConsultarPorCodigoTitularDireccion() >
+act14 -- bnd14 : 1.1: ingresarTextoBusqueda(q, capa) >
+bnd14 -- ctrl14 : 1.2: buscarElementos(criterio) >\n1.5: <- mostrarResultadosYZoomGeometria()
+ctrl14 -- ent14 : 1.3: -> consultarPorCodigoTitularDireccion()\n1.4: <- retornarCoincidencias()
 
-newpage CU15 - Diagrama de Comunicación: Medición Cartográfica (Distancia y Área)
+newpage 2.3.2.9. CU15 - Diagrama de Comunicación: Medición Cartográfica
 actor "Consultor" as act15
-boundary "VisorMapView\n(Panel Herramientas)" as bnd15
-control "MeasurementToolController\n(JS Leaflet Measure)" as ctrl15
-entity "GeodesicMeasurement\n(Haversine / Vincenty)" as ent15
+boundary "UI_PanelHerramientas" as bnd15 #E8F8F5
+control "MeasurementEngine" as ctrl15 #EBF5FB
+entity "CalculoGeodesico" as ent15 #FEF9E7
 
-act15 - bnd15 : 1: ActivarReglaDistanciaOArea() >\n2: ClicsEnVerticesDelMapa() >
-bnd15 - ctrl15 : 3: CalcularDistanciaOArea(coords) >\n5: MostrarTooltipValorCalculado() <
-ctrl15 - ent15 : 4: EjecutarCalculoGeodesico(m, km, m2, ha) >
+act15 -- bnd15 : 1.1: activarReglaDistanciaOArea() >\n1.2: clicsEnVerticesDelMapa() >
+bnd15 -- ctrl15 : 1.3: calcularDistanciaOArea(coords) >\n1.5: <- mostrarTooltipValorCalculado(m, m2)
+ctrl15 -- ent15 : 1.4: -> formulaVincentyHaversine()
 
-newpage CU16 - Diagrama de Comunicación: Geolocalización GPS y Coordenadas
+newpage 2.3.2.10. CU16 - Diagrama de Comunicación: Geolocalización GPS
 actor "Consultor / Operario" as act16
-boundary "VisorMapView &\nHUD Coordenadas" as bnd16
-control "LocationService\n(Navigator GPS API)" as ctrl16
-entity "CoordenadasWgs84 &\nAccuracyCircle" as ent16
+boundary "UI_HUDCoordenadas" as bnd16 #E8F8F5
+control "LocationService" as ctrl16 #EBF5FB
+entity "CoordenadaWGS84" as ent16 #FEF9E7
 
-act16 - bnd16 : 1: PulsarMiUbicacionOGoToCoords() >\n5: ActualizarHUDCoordenadas(EPSG:4326) <
-bnd16 - ctrl16 : 2: SolicitarPosicionActualGPS() >\n4: CentrarMapaYDibujarMarcadorPulsante() <
-ctrl16 - ent16 : 3: ObtenerLatLonMargenPrecision() >
+act16 -- bnd16 : 1.1: pulsarMiUbicacion() >\n1.5: <- actualizarHUD(EPSG:4326)
+bnd16 -- ctrl16 : 1.2: solicitarPosicionActualGPS() >\n1.4: <- centrarMapaYDibujarPuntoPulsante()
+ctrl16 -- ent16 : 1.3: -> obtenerLatLonPrecision()
 
-newpage CU17 - Diagrama de Comunicación: Exportación de Información (Logs y WKT)
+newpage 2.3.2.11. CU17 - Diagrama de Comunicación: Exportación de Información
 actor "Consultor / Admin" as act17
-boundary "VisorMapView &\nAuditoriaView" as bnd17
-control "ExportController /\nAuditoriaService" as ctrl17
-entity "CsvExportStream &\nWktGeometryString" as ent17
+boundary "UI_ExportDialog" as bnd17 #E8F8F5
+control "ExportController" as ctrl17 #EBF5FB
+entity "CsvExportStream" as ent17 #FEF9E7
 
-act17 - bnd17 : 1: SolicitarExportarCSVOCopiarWKT() >
-bnd17 - ctrl17 : 2: GenerarExportacion(tipo, id) >\n4: DescargarArchivoOCopiarClipboard() <
-ctrl17 - ent17 : 3: ObtenerWKTOGenerarStreamCSV() >
+act17 -- bnd17 : 1.1: solicitarExportarCSV() >
+bnd17 -- ctrl17 : 1.2: generarExportacion(tipo, filtros) >\n1.4: <- descargarArchivo('Auditoria_SIG.csv')
+ctrl17 -- ent17 : 1.3: -> generarStreamCSV_UTF8()
 
 ' ==============================================================================
-' 2. DIAGRAMAS DE SECUENCIA UML
+' 2. DIAGRAMAS DE SECUENCIA (CON ICONOS BCE EN LIFELINES Y ALT - IMAGEN 2)
 ' ==============================================================================
 
-newpage CU01 - Secuencia: Gestión de Sesión y Autenticación (Login)
+newpage 2.4.3.1. CU01 - Secuencia: Gestión de Sesión y Autenticación
 autonumber
-actor "Usuario / Admin" as u
-boundary "LoginView\n(Login.cshtml)" as lv
-control "AutenticacionController" as ac
-control "UsuarioService" as us
-control "UsuarioRepository" as ur
-database "SQL Server 2022" as db
+actor "Usuario" as u
+boundary "LoginView" as lv #E8F8F5
+control "AutenticacionController" as ac #EBF5FB
+control "UsuarioService" as us #EBF5FB
+entity "Usuario" as ent #FEF9E7
 
-u -> lv: IngresarCredenciales(user, pass)
-activate lv
-lv -> ac: PostLogin(LoginDto)
-activate ac
-ac -> us: AutenticarAsync(user, pass)
-activate us
-us -> ur: ObtenerPorUsernameAsync(user)
-activate ur
-ur -> db: SELECT * FROM Usuarios WHERE Username=@u
-activate db
-db --> ur: SqlDataReader (PasswordHash, Salt, Rol)
-deactivate db
-ur --> us: UsuarioEntity
-deactivate ur
-us -> us: VerificarHash(pass, Salt, 100000)
-us --> ac: ClaimsPrincipal / TokenValido
-deactivate us
-ac -> lv: HttpOnly Cookie (SessionId)
-deactivate ac
-lv --> u: Redirección autorizada a /Home/Index
-deactivate lv
-
-newpage CU06 - Secuencia: Validación de Integridad y WGS 84 (SRID 4326)
-autonumber
-actor "Operador Migrador" as op
-boundary "MainMigradorForm" as frm
-control "MigradorService" as ms
-control "ShapefileReader" as sr
-database "Sistema Archivos" as fs
-
-op -> frm: Clic 'Validar Proyección y CRS'
-activate frm
-frm -> ms: ValidarArchivoShapefileAsync(rutaShp)
-activate ms
-ms -> sr: InspeccionarPrj(rutaPrj)
-activate sr
-sr -> fs: File.ReadAllText(rutaPrj)
-activate fs
-fs --> sr: WKT_SpatialReference
-deactivate fs
-sr -> sr: ParsearWktSpatialReference()
-sr --> ms: Resultado (EsWGS84, SRID=4326)
-deactivate sr
-ms --> frm: ValidacionShapefileDto (Aprobado)
-deactivate ms
-frm --> op: Muestra badge verde 'WGS 84 Válido'
-deactivate frm
-
-newpage CU08 - Secuencia: Migración Masiva Transaccional por Lotes
-autonumber
-actor "Operador Migrador" as op
-boundary "MainMigradorForm" as frm
-control "MigradorService" as ms
-control "MigracionRepository" as mr
-control "AuditoriaService" as asrv
-database "SQL Server Spatial" as db
-
-op -> frm: Clic 'Iniciar Migración Masiva'
-activate frm
-frm -> ms: MigrarCapaAsync(opciones, IProgress)
-activate ms
-ms -> mr: IniciarTransaccionBatch(1000)
-activate mr
-mr -> db: BEGIN TRANSACTION
-activate db
-loop Por cada lote de 1000 entidades
-    ms -> mr: InsertarLoteGeometrias(batch)
-    mr -> db: BulkInsert / STGeomFromText(WKT, 4326)
-    ms -> frm: IProgress.Report(progreso, stats)
+alt Iniciar Sesión con Credenciales Válidas
+    u -> lv: 1: ingresarCredenciales(user, pass)
+    activate lv
+    lv -> ac: 2: POST /api/autenticacion/login
+    activate ac
+    ac -> us: 3: autenticarAsync(user, pass)
+    activate us
+    us -> ent: 4: buscarPorUsername(user)
+    activate ent
+    ent --> us: 5: confirmacion(hash, salt, rol)
+    deactivate ent
+    us -> us: 6: verificarPBKDF2(pass, salt)
+    us --> ac: 7: tokenValido(ClaimsPrincipal)
+    deactivate us
+    ac --> lv: 8: emitirCookie(HttpOnly)
+    deactivate ac
+    lv --> u: 9: redireccionar a /Home/Index
+    deactivate lv
+else Credenciales Inválidas o Bloqueo
+    u -> lv: 10: ingresarCredenciales(user, pass_invalido)
+    activate lv
+    lv -> ac: 11: POST /api/autenticacion/login
+    activate ac
+    ac -> us: 12: autenticarAsync(user, pass_invalido)
+    activate us
+    us --> ac: 13: errorAutenticacion('Credenciales no válidas')
+    deactivate us
+    ac --> lv: 14: 401 Unauthorized
+    deactivate ac
+    lv --> u: 15: mostrarAlertaError('Usuario o clave incorrecta')
+    deactivate lv
 end
-mr -> db: COMMIT TRANSACTION
-deactivate db
-mr --> ms: ConteoExitosos, ConteoFallidos
-deactivate mr
-ms -> asrv: RegistrarEventoMigracionAsync(dto)
-activate asrv
-asrv -> db: INSERT INTO BitacoraEventos
-deactivate asrv
-ms --> frm: ResumenMigracionDto (Exitoso)
+
+newpage 2.4.3.2. CU06 - Secuencia: Validación WGS 84 (SRID 4326)
+autonumber
+actor "OperadorMigrador" as op
+boundary "MainMigradorForm" as frm #E8F8F5
+control "MigradorService" as ms #EBF5FB
+control "ShapefileReader" as sr #EBF5FB
+entity "PrjSpatialReference" as prj #FEF9E7
+
+alt Proyección Cartográfica Válida (WGS 84)
+    op -> frm: 1: pulsar 'Validar Proyección y CRS'
+    activate frm
+    frm -> ms: 2: validarArchivoShapefileAsync(rutaShp)
+    activate ms
+    ms -> sr: 3: inspeccionarPrj(rutaPrj)
+    activate sr
+    sr -> prj: 4: parsearWKT_PRJ()
+    activate prj
+    prj --> sr: 5: confirmacion(EsWGS84=true, SRID=4326)
+    deactivate prj
+    sr --> ms: 6: resultado(Aprobado)
+    deactivate sr
+    ms --> frm: 7: validacionShapefileDto(Aprobado)
+    deactivate ms
+    frm --> op: 8: mostrar badge verde 'WGS 84 Válido'
+    deactivate frm
+else Proyección No Estándar (UTM o Sin PRJ)
+    op -> frm: 9: pulsar 'Validar Proyección'
+    activate frm
+    frm -> ms: 10: validarArchivoShapefileAsync(ruta)
+    activate ms
+    ms --> frm: 11: error('CRS no válido: Requiere EPSG:4326')
+    deactivate ms
+    frm --> op: 12: bloquear botón 'Iniciar Migración'
+    deactivate frm
+end
+
+newpage 2.4.3.3. CU08 - Secuencia: Migración Masiva Transaccional
+autonumber
+actor "OperadorMigrador" as op
+boundary "MainMigradorForm" as frm #E8F8F5
+control "MigradorService" as ms #EBF5FB
+control "BatchProcessor" as bp #EBF5FB
+entity "SqlTransaction" as tx #FEF9E7
+
+op -> frm: 1: clic 'Iniciar Migración Masiva'
+activate frm
+frm -> ms: 2: migrarCapaAsync(opciones, IProgress)
+activate ms
+ms -> tx: 3: BEGIN TRANSACTION
+activate tx
+loop Por cada lote de 1000 entidades espaciales
+    ms -> bp: 4: insertarLote(batch, SRID=4326)
+    activate bp
+    bp -> tx: 5: BulkInsert STGeomFromText() con STIsValid() = 1
+    bp --> ms: 6: confirmacion(insertados, tiempoMs)
+    deactivate bp
+    ms --> frm: 7: reportarProgreso(porcentaje, stats)
+end
+ms -> tx: 8: COMMIT TRANSACTION
+deactivate tx
+ms --> frm: 9: resumenMigracionDto(Exitoso)
 deactivate ms
-frm --> op: Cuadro de diálogo de confirmación y estadísticas
+frm --> op: 10: desplegar cuadro de estadísticas finales
 deactivate frm
 
-newpage CU11 - Secuencia: Carga de Visor y GeoJSON BBox
+newpage 2.4.3.4. CU11 - Secuencia: Carga de Visor y GeoJSON BBox
 autonumber
 actor "Consultor" as c
-boundary "LeafletMap Canvas" as map
-control "CapasApiController" as api
-control "CapaService" as cs
-control "CapaRepository" as cr
-database "SQL Server Spatial" as db
+boundary "LeafletMap" as map #E8F8F5
+control "CapasApiController" as api #EBF5FB
+control "CapaService" as cs #EBF5FB
+entity "LotePredio" as ent #FEF9E7
 
-c -> map: Pan / Zoom en el territorio
+c -> map: 1: pan / zoom en el territorio
 activate map
-map -> api: GET /api/capas/geojson?capa=Lotes&bbox=minX,minY,maxX,maxY
+map -> api: 2: GET /api/capas/geojson?capa=Lotes&bbox=minX,minY,maxX,maxY
 activate api
-api -> cs: ObtenerGeoJsonBBoxAsync(capa, bbox)
+api -> cs: 3: obtenerGeoJsonBBoxAsync(capa, bbox)
 activate cs
-cs -> cr: ConsultarGeometriasBBox(capa, bboxGeom)
-activate cr
-cr -> db: SELECT Id, WKT FROM Lotes WHERE Geometria.Filter(@bboxGeom) = 1
-activate db
-db --> cr: Registros Espaciales
-deactivate db
-cr --> cs: Lista Entidades
-deactivate cr
-cs -> cs: SerializarRFC7946(FeatureCollection)
-cs --> api: GeoJsonString comprimido Gzip
+cs -> ent: 4: SELECT WHERE Geometria.Filter(bbox) = 1
+activate ent
+ent --> cs: 5: SqlDataReader (WKT / Atributos)
+deactivate ent
+cs -> cs: 6: serializar FeatureCollection (Gzip)
+cs --> api: 7: 200 OK (Content-Encoding: gzip)
 deactivate cs
-api --> map: 200 OK (Content-Encoding: gzip)
+api --> map: 8: respuesta GeoJSON RFC 7946
 deactivate api
-map -> map: L.geoJSON().addTo(map)
-map --> c: Renderizado interactivo de geometrías
+map -> map: 9: L.geoJSON().addTo(map)
+map --> c: 10: renderizado vectorial con estilos y simbología
 deactivate map
 
-newpage CU13 - Secuencia: Identificación por Clic / Toque
+newpage 2.4.3.5. CU13 - Secuencia: Identificación por Clic / Toque
 autonumber
 actor "Consultor" as c
-boundary "LeafletMap" as map
-boundary "EntityDetailDrawer" as drw
-control "CapasApiController" as api
-control "CapaRepository" as cr
-database "SQL Server Spatial" as db
+boundary "LeafletMap" as map #E8F8F5
+boundary "EntityDrawer" as drw #E8F8F5
+control "CapasApiController" as api #EBF5FB
+entity "LotePredio" as ent #FEF9E7
 
-c -> map: Clic sobre predio (lat, lon)
+c -> map: 1: clic sobre predio (lat, lon)
 activate map
-map -> api: GET /api/capas/identificar?lat=Y&lon=X&tol=0.0001
+map -> api: 2: GET /api/capas/identificar?lat=Y&lon=X&tol=0.0001
 activate api
-api -> cr: IdentificarEntidadAsync(lat, lon)
-activate cr
-cr -> db: SELECT TOP 1 * FROM Lotes WHERE Geometria.STIntersects(Point) = 1
-activate db
-db --> cr: Atributos catastrales y WKT
-deactivate db
-cr --> api: FichaPredialDto
-deactivate cr
-api --> map: 200 OK (Datos + WKT)
+api -> ent: 3: SELECT TOP 1 WHERE STIntersects(Point) = 1
+activate ent
+ent --> api: 4: confirmacion(atributos, WKT)
+deactivate ent
+api --> map: 5: 200 OK (FichaPredialDto + WKT)
 deactivate api
-map -> map: Resaltar polígono (stroke cian)
-map -> drw: Cargar y desplegar ficha técnica
+map -> map: 6: resaltar polígono (stroke cian)
+map -> drw: 7: abrir drawer lateral y poblar ficha
 activate drw
-drw --> c: Visualización de titular, área, zonificación y código
+drw --> c: 8: visualización de titular, superficie m2, código y zonificación
 deactivate drw
 deactivate map
 
-newpage CU14 - Secuencia: Búsqueda Alfanumérica Predictiva y Enfoque
+newpage 2.4.3.6. CU14 - Secuencia: Búsqueda Predictiva Multicriterio
 autonumber
 actor "Consultor" as c
-boundary "SearchBar / Sidebar" as sb
-control "BusquedaApiController" as api
-control "BusquedaService" as bs
-control "BusquedaRepository" as br
-boundary "LeafletMap" as map
+boundary "SearchBar" as sb #E8F8F5
+control "BusquedaApiController" as api #EBF5FB
+control "BusquedaService" as bs #EBF5FB
+boundary "LeafletMap" as map #E8F8F5
 
-c -> sb: Ingresar término de búsqueda (ej. 'M-12')
+c -> sb: 1: ingresar término (ej. 'M-12' o titular)
 activate sb
-sb -> api: GET /api/busqueda/rapida?q=termino&capa=Lotes
+sb -> api: 2: GET /api/busqueda/rapida?q=termino
 activate api
-api -> bs: BuscarAsync(query, capa)
+api -> bs: 3: buscarAsync(query, capa)
 activate bs
-bs -> br: ConsultarPorIndicesTexto(query)
-activate br
-br --> bs: Lista de Coincidencias
-deactivate br
-bs --> api: List<ResultadoBusquedaDto>
+bs --> api: 4: retorno List<ResultadoBusquedaDto>
 deactivate bs
-api --> sb: 200 OK (JSON Coincidencias)
+api --> sb: 5: 200 OK (coincidencias JSON)
 deactivate api
-sb --> c: Desplegar lista interactiva de resultados
-c -> sb: Seleccionar predio de la lista
-sb -> map: fitBounds(bboxGeometria) + highlight()
+sb --> c: 6: desplegar lista interactiva en sidebar
+c -> sb: 7: seleccionar predio de la lista
+sb -> map: 8: fitBounds(bbox) + highlight()
 activate map
-map --> c: Zoom suave y enfoque centrado en la geometría
+map --> c: 9: zoom suave y centrado en la geometría
 deactivate map
 deactivate sb
 
-newpage CU15 - Secuencia: Medición Cartográfica (Distancia y Área)
+newpage 2.4.3.7. CU15 - Secuencia: Medición Cartográfica
 autonumber
 actor "Consultor" as c
-boundary "PanelHerramientas" as ph
-control "MeasurementEngine (JS)" as me
-boundary "LeafletMap Canvas" as map
+boundary "PanelHerramientas" as ph #E8F8F5
+control "MeasurementEngine" as me #EBF5FB
+boundary "LeafletMap" as map #E8F8F5
 
-c -> ph: Clic 'Medir Distancia' o 'Medir Área'
+c -> ph: 1: clic 'Medir Distancia' o 'Medir Área'
 activate ph
-ph -> me: ActivarModoMedicion(tipo)
+ph -> me: 2: activarModoMedicion(tipo)
 activate me
-me -> map: Cambiar cursor a Crosshair
+me -> map: 3: cambiar cursor a Crosshair
 activate map
 loop Clics sucesivos en vértices
-    c -> map: Clic en coordenadas del mapa
-    map -> me: Evento map.click(latlng)
-    me -> me: CalcularFormulaGeodesica(Haversine)
-    me -> map: Trazar polilínea / polígono sombreado
-    me -> map: Actualizar tooltip flotante con valor actual
+    c -> map: 4: clic en coordenadas
+    map -> me: 5: map.click(latlng)
+    me -> me: 6: calcularFormulaGeodesicaHaversine()
+    me -> map: 7: trazar línea / polígono sombreado
+    me -> map: 8: actualizar tooltip emergente (m, m2, ha)
 end
-c -> map: Doble clic para finalizar medición
-map -> me: Evento map.dblclick()
-me --> c: Valor métrico final fijado en pantalla (m, km, m2, ha)
+c -> map: 9: doble clic finaliza trazado
+map -> me: 10: map.dblclick()
+me --> c: 11: resultado métrico fijado en pantalla
 deactivate map
 deactivate me
 deactivate ph
 
-newpage CU16 - Secuencia: Geolocalización GPS y Navegación por Coordenadas
+newpage 2.4.3.8. CU16 - Secuencia: Geolocalización GPS
 autonumber
 actor "Usuario / Operario" as u
-boundary "ControlesGpsHUD" as hud
-control "GeolocationAPI / LocationService" as gps
-boundary "LeafletMap" as map
+boundary "ControlesHUD" as hud #E8F8F5
+control "GeolocationService" as gps #EBF5FB
+boundary "LeafletMap" as map #E8F8F5
 
-u -> hud: Clic 'Detectar Mi Ubicación' o 'Ir a Coordenadas'
+u -> hud: 1: pulsar 'Detectar Mi Ubicación'
 activate hud
-hud -> gps: getCurrentPosition(enableHighAccuracy: true)
+hud -> gps: 2: getCurrentPosition(enableHighAccuracy)
 activate gps
-gps --> hud: Position (Latitude, Longitude, Accuracy)
+gps --> hud: 3: confirmacion(Position: lat, lon, accuracy)
 deactivate gps
-hud -> map: setView([lat, lon], zoom: 17)
+hud -> map: 4: setView([lat, lon], 17)
 activate map
-map -> map: Agregar L.circleMarker (punto azul con pulsación)
-map -> map: Dibujar círculo de margen de error (Accuracy)
-hud -> hud: Actualizar HUD inferior: 'Lon: X | Lat: Y | EPSG:4326'
-map --> u: Centrado exacto de la posición del usuario en el mapa
+map -> map: 5: dibujar L.circleMarker pulsante y círculo de precisión
+hud -> hud: 6: actualizar HUD: 'EPSG:4326 WGS 84'
+map --> u: 7: centrado automático en la posición actual
 deactivate map
 deactivate hud
 
-newpage CU17 - Secuencia: Exportación de Información (Logs y WKT)
+newpage 2.4.3.9. CU17 - Secuencia: Exportación de Información
 autonumber
 actor "Consultor / Admin" as u
-boundary "VisorUI / AuditoriaView" as ui
-control "ExportController / AdminController" as ctrl
-control "AuditoriaService" as asrv
-control "BitacoraRepository" as br
+boundary "AuditoriaView" as ui #E8F8F5
+control "ExportController" as ctrl #EBF5FB
+control "AuditoriaService" as asrv #EBF5FB
 
-u -> ui: Clic 'Exportar CSV' o 'Copiar WKT'
+u -> ui: 1: clic 'Exportar CSV' o 'Copiar WKT'
 activate ui
-ui -> ctrl: SolicitudExportacion(filtros / idEntidad)
+ui -> ctrl: 2: generarExportacion(tipo, filtros)
 activate ctrl
-ctrl -> asrv: GenerarExportacionAsync(filtros)
+ctrl -> asrv: 3: exportarRegistrosCsvAsync(filtros)
 activate asrv
-asrv -> br: ConsultarEventosAuditoria(filtros)
-activate br
-br --> asrv: List<BitacoraDto>
-deactivate br
-asrv -> asrv: SerializarStreamCSV(UTF8)
-asrv --> ctrl: FileContentResult (text/csv)
+asrv --> ctrl: 4: FileContentResult (text/csv UTF8)
 deactivate asrv
-ctrl --> ui: Descarga de archivo 'Auditoria_SIG_2026.csv'
-ui --> u: Confirmación de archivo descargado o WKT en portapapeles
+ctrl --> ui: 5: descarga directa 'Auditoria_SIG_2026.csv'
 deactivate ctrl
+ui --> u: 6: notificación de descarga completada
 deactivate ui
+
+' ==============================================================================
+' 3. ARQUITECTURA MODULAR POR BLOQUES (ESTILO IMAGEN 3)
+' ==============================================================================
+
+newpage 2.1.7.3. Arquitectura Modular del Sistema VisorDatosSIG 2026
+
+package "«browser»\nCliente Web VisorDatosSIG\n(Consultores y Administradores)" as CWeb #D4EFDF {
+    component [Leaflet.js 1.9 + Bootstrap 5] as Leaflet
+    component [Interfaz Cartográfica & HUD Coordenadas] as WebUI
+    component [Módulos JS: Map, Layers, Measure, Search] as JSModules
+}
+
+package "Backend Principal VisorDatosSIG\n(ASP.NET Core 8 Web API & MVC)" as CBackend #D6EAF8 {
+    component [Kestrel / Reverse Proxy HTTPS (Puerto 5000)] as Gateway
+    component [Controladores: Capas, Agua, Admin, Busqueda] as Controllers
+    component [Autenticación PBKDF2-HMAC-SHA512 + PBAC] as Auth
+    component [Módulos Negocio: Catastro, Red Vial, Cortes y Reconexiones] as Negocio
+    component [DijkstraRoutingService (Rutas sobre Grafo Red de Calles)] as Dijkstra
+    component [Dapper ORM & Spatial Repositories] as Dapper
+    database "Microsoft SQL Server 2022 Spatial\n(GEOMETRY WGS 84 SRID 4326)" as SqlDb #FADBD8
+}
+
+package "«device»\nApp Móvil Cuadrillas\n(Flutter / Dart)" as CMovil #FCF3CF {
+    component [Flutter UI (TaskList, RouteMap, FieldRecord)] as FlutterUI
+    component [Módulo GPS & Telemetría en Tiempo Real] as GPSMovil
+    component [Cámara y Captura de Evidencias de Medidor] as CameraMovil
+}
+
+package "Suite Escritorio ETL\n(VisorDatosSIG.Migrador WinForms)" as CDesktop #E8DAEF {
+    component [Parser Binario ESRI (.shp/.shx/.dbf/.prj)] as Parser
+    component [Validador Criptográfico WGS 84 (SRID 4326)] as Validator
+    component [Motor Transaccional por Lotes (Batch Insert + Rollback)] as Batch
+}
+
+package "Servidores Base Cartográficos (Nube)" as CCloud #E5E7E9 {
+    component [OpenStreetMap (Tile Server)] as OSM
+    component [Carto Positron / Carto Dark (CDN)] as Carto
+    component [Esri World Imagery (Satelital)] as Esri
+}
+
+package "Almacenamiento y Auditoría" as CStorage #E8F8F5 {
+    component [Repositorio de Fotos de Medidores] as FotoStorage
+    component [Bitácora de Auditoría Inmutable] as AuditStorage
+}
+
+CWeb --> Gateway : HTTPS REST / GeoJSON RFC 7946
+CMovil --> Gateway : REST API JSON / HTTP 2.0 (Telemetría)
+CDesktop --> SqlDb : TDS / TCP-IP 1433 (Transaccional Batch)
+Gateway --> Controllers
+Controllers --> Negocio
+Negocio --> Dijkstra
+Negocio --> Dapper
+Dapper --> SqlDb : SQL Spatial (STIntersects, Filter)
+CWeb --> CCloud : HTTP/S Tile Request XYZ
+CMovil --> FotoStorage : Carga de evidencias fotográficas
+Controllers --> AuditStorage : Registro continuo de eventos
+
+' ==============================================================================
+' 4. DIAGRAMA DE DESPLIEGUE FÍSICO JERÁRQUICO (ESTILO IMAGEN 4)
+' ==============================================================================
+
+newpage Figura 3. Diagrama de Despliegue Físico - VisorDatosSIG 2026
+
+node "Servidor Base de Datos Espacial\n«execution environment»\nUbuntu Server 22.04 LTS / Docker Host" as NodeBD #D6EAF8 {
+    node "Motor Persistencia: SQL Server 2022 Spatial" as EngineBD {
+        artifact "VisorDatosSIG_BD\n(Tablas, R-Tree Indexes, Stored Procedures)" as ArtBD
+    }
+}
+
+node "Servidor de Aplicaciones Web & API\n«execution environment»\nLinux Kestrel Runtime .NET 8.0" as NodeApp #D4EFDF {
+    node "Web Server & Reverse Proxy\nKestrel / Nginx" as WebHost {
+        artifact "VisorDatosSIG.Web.dll & VisorDatosSIG.Api.dll\n(REST Services, Dijkstra Engine, Dapper)" as ArtApp
+    }
+}
+
+node "Servidores Cartográficos Base (Nube)\n«cloud environment»" as NodeCloud #E5E7E9 {
+    artifact "OSM / Carto CDN / Esri Imagery Tile Servers" as ArtTiles
+}
+
+node "«device»\nPC / Laptop del Consultor Catastral\n«execution environment» Windows 10/11" as NodePCWeb #FCF3CF {
+    artifact "Navegador Web: Leaflet.js 1.9 SPA\n(Lienzo Cartográfico, HUD, Herramientas)" as ArtBrowser
+}
+
+node "«device»\nPC Operador de Datos Espaciales\n«execution environment» Windows 10/11 x64 (.NET 8)" as NodePCMigrador #E8DAEF {
+    artifact "VisorDatosSIG.Migrador.exe\n(Lector Shapefiles Nativo WinForms)" as ArtMigrador
+}
+
+node "«device»\nSmartphone Cuadrilla de Terreno\n«execution environment» Android 10+ / iOS 14+" as NodeMovil #FADBD8 {
+    artifact "VisorDatosSIG_Movil.apk\n(Flutter Engine, GPS Tracker, Cámara)" as ArtApk
+}
+
+NodeApp -- NodeBD : TDS / TCP-IP\n(Puerto 1433 - SRID 4326)
+NodePCWeb -- NodeApp : HTTPS / TLS 1.3\n(Puerto 5000 / 443)
+NodePCWeb -- NodeCloud : HTTP/S Tile Request (XYZ)
+NodePCMigrador -- NodeBD : TCP-IP 1433\n(Transaccional Batch)
+NodeMovil -- NodeApp : REST API JSON / HTTP 2.0\n(Telemetría y Rutas)
+
+' ==============================================================================
+' 5. MODELO DE DATOS ESPACIAL (ERD SQL SERVER 2022 SPATIAL)
+' ==============================================================================
+
+newpage 2.4.2. Modelo de Datos Espacial (Base de Datos ERD)
+
+class Manzanas << (T,#ADD8E6) table >> {
+    + PK IdManzana : int
+    --
+    CodigoManzana : varchar(50) [UQ]
+    Sector : varchar(100)
+    Barrio : varchar(100)
+    PerimetroM : decimal(12,2)
+    SuperficieM2 : decimal(12,2)
+    SPATIAL Geometria : geometry (Polygon SRID 4326)
+}
+
+class Lotes << (T,#ADD8E6) table >> {
+    + PK IdLote : int
+    --
+    CodigoLote : varchar(50) [UQ]
+    FK IdManzana : int
+    NumeroPredio : varchar(50)
+    Titular : varchar(150)
+    Direccion : varchar(200)
+    UsoSuelo : varchar(50)
+    FrenteM : decimal(10,2)
+    FondoM : decimal(10,2)
+    SuperficieM2 : decimal(12,2)
+    SPATIAL Geometria : geometry (Polygon SRID 4326)
+}
+
+class Vias << (T,#ADD8E6) table >> {
+    + PK IdVia : int
+    --
+    NombreVia : varchar(150)
+    TipoVia : varchar(50) (Avenida, Calle, Jiron)
+    Jerarquia : varchar(50) (Arteria, Local)
+    Sentido : varchar(30)
+    Pavimento : varchar(50) (Asfalto, Concreto)
+    AnchoMetros : decimal(8,2)
+    SPATIAL Geometria : geometry (LineString SRID 4326)
+}
+
+class CodigosFijos << (T,#ADD8E6) table >> {
+    + PK IdCodigoFijo : int
+    --
+    Codigo : varchar(50) [UQ]
+    Tipo : varchar(50) (Hito, Vertice, Camara)
+    CotaZ : decimal(10,3)
+    Referencia : varchar(200)
+    SPATIAL Geometria : geometry (Point SRID 4326)
+}
+
+class ConexionesAgua << (T,#ADD8E6) table >> {
+    + PK IdConexion : int
+    --
+    CodigoConexion : varchar(50) [UQ]
+    NumeroMedidor : varchar(50) [UQ]
+    FK IdLote : int
+    Titular : varchar(150)
+    Direccion : varchar(200)
+    Categoria : varchar(50)
+    EstadoConexion : varchar(30) (Normal/ParaCorte/Cortado)
+    MesesMora : int
+    SaldoPendiente : decimal(12,2)
+    UltimaLectura : decimal(10,2)
+    Longitud : float
+    Latitud : float
+    SPATIAL Geometria : geometry (Point SRID 4326)
+}
+
+class Trabajadores << (T,#ADD8E6) table >> {
+    + PK IdTrabajador : int
+    --
+    CodigoTrabajador : varchar(50) [UQ]
+    NombreCompleto : varchar(150)
+    Telefono : varchar(30)
+    TipoTrabajador : varchar(30) (Cortador/Reconector)
+    Estado : varchar(30) (Disponible/EnRuta)
+    Vehiculo : varchar(50) (Moto/A pie)
+    FK IdUsuario : int
+}
+
+class Asignaciones << (T,#ADD8E6) table >> {
+    + PK IdAsignacion : int
+    --
+    CodigoAsignacion : varchar(50) [UQ]
+    FK IdTrabajador : int
+    TipoServicio : varchar(30) (Corte/Reconexion)
+    FechaAsignacion : date
+    Estado : varchar(30) (Pendiente/EnProgreso/Completada)
+    CantidadPuntos : int
+    DistanciaTotalMetros : decimal(12,2)
+    RutaOptimaWkt : varchar(max) (Calculada Dijkstra)
+}
+
+class AsignacionDetalle << (T,#ADD8E6) table >> {
+    + PK IdDetalle : int
+    --
+    FK IdAsignacion : int
+    FK IdConexion : int
+    OrdenSecuencia : int (1, 2, 3... N)
+    DistanciaDesdeAnteriorM : decimal(10,2)
+    Estado : varchar(30) (Ejecutado/CasaCerrada/Imposible)
+    LecturaActual : decimal(10,2)
+    NumeroMedidorReportado : varchar(50)
+    FotoMedidorUrl : varchar(500)
+    Observacion : varchar(500)
+    GpsLatEjecucion : float
+    GpsLonEjecucion : float
+}
+
+class Usuarios << (T,#ADD8E6) table >> {
+    + PK IdUsuario : int
+    --
+    Username : varchar(50) [UQ]
+    PasswordHash : varchar(256) (PBKDF2-SHA512)
+    Salt : varchar(128)
+    NombreCompleto : varchar(150)
+    IdRol : int
+    Activo : bit
+}
+
+Manzanas "1" -- "0..*" Lotes : contiene >
+Lotes "1" -- "0..*" ConexionesAgua : ubica >
+Trabajadores "1" -- "0..*" Asignaciones : asigna >
+Asignaciones "1" -- "1..*" AsignacionDetalle : secuencia paradas >
+ConexionesAgua "1" -- "0..*" AsignacionDetalle : interviene >
+Usuarios "0..1" -- "1" Trabajadores : vincula credencial >
+
+' ==============================================================================
+' 6. DIAGRAMA DE CLASES DEL SISTEMA (CLEAN ARCHITECTURE .NET 8)
+' ==============================================================================
+
+newpage 2.4.1. Diagrama de Clases del Sistema (C# .NET 8)
+
+interface IDijkstraRoutingService {
+    + CalcularRutaOptima(grafo, inicio, puntos) : RutaCalculadaDto
+    + ConstruirGrafoDesdeRedVias(vias) : GrafoVial
+    + OrdenarParadasSecuencia(nodos) : List<PuntoRutaDto>
+}
+
+class DijkstraRoutingService implements IDijkstraRoutingService {
+    - _viasRepo : IViasRepository
+    + CalcularRutaOptima(...) : RutaCalculadaDto
+    - EncontrarCaminoMinimo(origen, destino) : PathResult
+}
+
+interface IAguaService {
+    + ObtenerDashboardAsync() : DashboardAguaDto
+    + GenerarAsignacionAsync(dto) : AsignacionDto
+    + RegistrarResultadoCampoAsync(dto) : bool
+    + ObtenerTelemetriaOperariosAsync() : List<OperarioMonitoreoDto>
+}
+
+class AguaService implements IAguaService {
+    - _aguaRepo : IAguaRepository
+    - _dijkstraService : IDijkstraRoutingService
+    + GenerarAsignacionAsync(dto) : AsignacionDto
+}
+
+class AguaApiController {
+    - _aguaService : IAguaService
+    + GetDashboard() : IActionResult
+    + PostAsignacion(dto) : IActionResult
+    + PostResultadoCampo(dto) : IActionResult
+}
+
+class CapasApiController {
+    - _capaService : ICapaService
+    + GetGeoJsonBBox(capa, bbox) : IActionResult
+    + IdentificarEntidad(lat, lon, tol) : IActionResult
+}
+
+class LoteEntity {
+    + IdLote : int
+    + CodigoLote : string
+    + Titular : string
+    + SuperficieM2 : decimal
+    + GeometriaWkt : string (Polygon)
+}
+
+class ConexionAguaEntity {
+    + IdConexion : int
+    + CodigoConexion : string
+    + NumeroMedidor : string
+    + EstadoConexion : EstadoConexionEnum
+    + MesesMora : int
+    + SaldoPendiente : decimal
+    + Coordenada : Point
+}
+
+class AsignacionEntity {
+    + IdAsignacion : int
+    + CodigoAsignacion : string
+    + Trabajador : TrabajadorEntity
+    + TipoServicio : TipoServicioEnum
+    + RutaOptimaWkt : string
+    + PuntosDetalle : List<AsignacionDetalleEntity>
+}
+
+AguaApiController --> IAguaService : uses >
+CapasApiController --> CapaService : uses >
+AguaService --> IDijkstraRoutingService : uses >
+AsignacionEntity "1" *-- "1..*" AsignacionDetalleEntity : compone >
+AsignacionDetalleEntity --> ConexionAguaEntity : referencia >
 
 @enduml
