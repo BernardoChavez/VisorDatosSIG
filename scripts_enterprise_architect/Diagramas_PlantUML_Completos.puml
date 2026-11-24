@@ -690,3 +690,85 @@ AsignacionEntity "1" *-- "1..*" AsignacionDetalleEntity : compone >
 AsignacionDetalleEntity --> ConexionAguaEntity : referencia >
 
 @enduml
+
+' ==============================================================================
+' 2.3.3. DIAGRAMA DE DEPENDENCIA ENTRE PAQUETES DE ANÁLISIS
+' ==============================================================================
+@startuml Diagrama_Dependencia_Paquetes
+skinparam packageStyle rectangle
+skinparam roundCorner 8
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+skinparam package {
+    BackgroundColor #F8FAFC
+    BorderColor #1E293B
+    BorderThickness 1.5
+    FontSize 12
+    FontStyle bold
+}
+
+skinparam note {
+    BackgroundColor #FEF3C7
+    BorderColor #D97706
+}
+
+package "pkg_Visor_Cartografico" as P_Visor {
+    [Lienzo Leaflet interactivo]
+    [Renderizado capas vectoriales]
+    [Mapas base OSM y Satelital]
+    [Herramientas de visualización]
+}
+
+package "pkg_Consultas_Exportacion" as P_Consultas {
+    [Búsqueda predictiva debounce]
+    [Medición distancia y polígonos]
+    [Geolocalización GPS WGS 84]
+    [Exportación CSV logs y WKT]
+}
+
+package "pkg_Migrador_Espacial" as P_Migrador {
+    [Inspección SHP / DBF / PRJ]
+    [Validación STIsValid()]
+    [Transformación WGS 84 SRID 4326]
+    [Carga masiva transaccional]
+}
+
+package "pkg_Gestion_Agua_Dijkstra" as P_Agua {
+    [Conexiones y detección de mora]
+    [Órdenes corte y reconexión]
+    [Grafo vial y algoritmo Dijkstra]
+    [Telemetría cuadrillas en campo]
+}
+
+package "pkg_Servicios_API_GeoJSON" as P_Api {
+    [Endpoints RESTful RFC 7946]
+    [Filtrado espacial BBOX]
+    [Consultas STIntersects]
+    [Catálogo metadatos capas]
+}
+
+package "pkg_Seguridad_Acceso" as P_Seg {
+    [Autenticación y sesiones]
+    [PBKDF2-HMAC-SHA512 + Salt]
+    [Control de acceso RBAC/PBAC]
+    [Bitácora inmutable auditoría]
+}
+
+' Relaciones de Dependencia («use»)
+P_Visor ..> P_Api : <<use>> Consume GeoJSON
+P_Visor ..> P_Consultas : <<use>> Herramientas y búsqueda
+P_Visor ..> P_Agua : <<use>> Visualiza cortes y rutas
+
+P_Consultas ..> P_Api : <<use>> Atributos y BBox
+
+P_Agua ..> P_Api : <<use>> Red vial y conexiones
+P_Agua ..> P_Seg : <<use>> Valida cuadrilla
+
+P_Migrador ..> P_Seg : <<use>> Rol Administrador
+P_Migrador ..> P_Api : <<use>> Catálogo de capas
+
+P_Api ..> P_Seg : <<use>> Valida claims y audita
+
+@enduml
+
