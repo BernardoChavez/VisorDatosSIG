@@ -10,14 +10,17 @@ namespace VisorDatosSIG.Application.Services;
 
 public class CapaService : ICapaService
 {
-    private readonly ICapaRepository _capaRepository;
     private static readonly ConcurrentDictionary<string, (GeoJsonFeatureCollection Data, DateTime ExpirationUtc)> _geoJsonCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly ConcurrentDictionary<string, (List<CapaCatalogoDto> Data, DateTime ExpirationUtc)> _catalogoCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(20);
 
-    public CapaService(ICapaRepository capaRepository)
+    private readonly ICapaRepository _capaRepository;
+    private readonly IAguaRepository? _aguaRepository;
+
+    public CapaService(ICapaRepository capaRepository, IAguaRepository? aguaRepository = null)
     {
         _capaRepository = capaRepository;
+        _aguaRepository = aguaRepository;
     }
 
     public void InvalidarCache(string? nombreCapa = null)
@@ -262,6 +265,43 @@ public class CapaService : ICapaService
                 }
                 break;
 
+            case "conexionesagua":
+            case "agua":
+                if (_aguaRepository != null)
+                {
+                    var conexiones = await _aguaRepository.ObtenerConexionesAguaAsync(null, bbox, null);
+                    foreach (var c in conexiones)
+                    {
+                        featureCollection.Features.Add(new GeoJsonFeature
+                        {
+                            Id = c.IdConexion,
+                            Geometry = GeoJsonConverter.WktToGeoJsonGeometry(c.Wkt) ?? new GeoJsonGeometry
+                            {
+                                Type = "Point",
+                                Coordinates = new double[] { c.Longitud, c.Latitud }
+                            },
+                            Properties = new Dictionary<string, object?>
+                            {
+                                ["id"] = c.IdConexion,
+                                ["codigo"] = c.CodigoConexion,
+                                ["numeroMedidor"] = c.NumeroMedidor,
+                                ["codigoLote"] = c.CodigoLote,
+                                ["codigoManzana"] = c.CodigoManzana,
+                                ["titular"] = c.Titular,
+                                ["direccion"] = c.Direccion,
+                                ["categoria"] = c.Categoria,
+                                ["estadoConexion"] = c.EstadoConexion,
+                                ["mesesMora"] = c.MesesMora,
+                                ["saldoPendiente"] = c.SaldoPendiente,
+                                ["ultimaLectura"] = c.UltimaLectura,
+                                ["longitud"] = c.Longitud,
+                                ["latitud"] = c.Latitud
+                            }
+                        });
+                    }
+                }
+                break;
+
             default:
                 throw new ArgumentException($"La capa '{nombreCapa}' no está registrada en el sistema.");
         }
@@ -280,6 +320,37 @@ public class CapaService : ICapaService
 
     public async Task<EntidadDetalleDto?> ObtenerDetalleEntidadAsync(string nombreCapa, int idEntidad)
     {
+        if (_aguaRepository != null && (nombreCapa.Equals("ConexionesAgua", StringComparison.OrdinalIgnoreCase) || nombreCapa.Equals("agua", StringComparison.OrdinalIgnoreCase)))
+        {
+            var con = await _aguaRepository.ObtenerConexionPorIdAsync(idEntidad);
+            if (con != null)
+            {
+                return new EntidadDetalleDto
+                {
+                    Capa = "ConexionesAgua",
+                    IdEntidad = con.IdConexion,
+                    Codigo = con.CodigoConexion,
+                    Titulo = $"Medidor {con.NumeroMedidor} ({con.EstadoConexion})",
+                    Subtitulo = con.Titular,
+                    Wkt = con.Wkt,
+                    LonCentro = con.Longitud,
+                    LatCentro = con.Latitud,
+                    Atributos = new Dictionary<string, object?>
+                    {
+                        ["Titular"] = con.Titular,
+                        ["Dirección"] = con.Direccion,
+                        ["Estado Servicio"] = con.EstadoConexion,
+                        ["Categoría"] = con.Categoria,
+                        ["Meses en Mora"] = con.MesesMora,
+                        ["Saldo Pendiente"] = con.SaldoPendiente,
+                        ["Última Lectura"] = con.UltimaLectura,
+                        ["Manzana"] = con.CodigoManzana,
+                        ["Lote"] = con.CodigoLote
+                    }
+                };
+            }
+        }
+
         var raw = await _capaRepository.ObtenerEntidadPorIdAsync(nombreCapa, idEntidad);
         if (raw == null) return null;
 

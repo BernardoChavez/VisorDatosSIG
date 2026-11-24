@@ -518,6 +518,8 @@ BEGIN
     SET NOCOUNT ON;
     SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
+    IF @Capa = 'todas' OR @Capa = '' SET @Capa = NULL;
+
     DECLARE @Offset INT = (@Pagina - 1) * @RegistrosPorPagina;
     DECLARE @TerminoLike VARCHAR(105) = '%' + TRIM(@Termino) + '%';
 
@@ -594,6 +596,26 @@ BEGIN
           AND (v.CodigoVia LIKE @TerminoLike 
                OR v.Nombre LIKE @TerminoLike 
                OR v.TipoVia LIKE @TerminoLike)
+
+        UNION ALL
+        
+        -- ConexionesAgua
+        SELECT 
+            'ConexionesAgua' AS Capa,
+            w.IdConexion AS IdEntidad,
+            w.CodigoConexion AS Codigo,
+            'Medidor ' + w.NumeroMedidor + ' (' + w.EstadoConexion + ') - ' + w.Titular AS Descripcion,
+            'Dir: ' + w.Direccion + ' | Saldo: Bs. ' + CAST(w.SaldoPendiente AS VARCHAR(20)) + ' | Mora: ' + CAST(w.MesesMora AS VARCHAR(10)) + 'm' AS Detalle,
+            w.Geometria.STAsText() AS WKT,
+            w.Geometria.STX AS LonCentro,
+            w.Geometria.STY AS LatCentro
+        FROM dbo.ConexionesAgua w
+        WHERE (@Capa IS NULL OR @Capa = 'ConexionesAgua' OR @Capa = 'Agua')
+          AND (w.CodigoConexion LIKE @TerminoLike 
+               OR w.NumeroMedidor LIKE @TerminoLike 
+               OR w.Titular LIKE @TerminoLike
+               OR w.Direccion LIKE @TerminoLike
+               OR w.EstadoConexion LIKE @TerminoLike)
     )
     SELECT 
         COUNT(*) OVER() AS TotalRegistros,

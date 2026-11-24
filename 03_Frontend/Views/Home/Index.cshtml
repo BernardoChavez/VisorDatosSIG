@@ -115,6 +115,41 @@
                     }
                 </div>
 
+                <!-- Filtro por Estado de Conexión de Agua Potable -->
+                <div class="sig-section-title mt-4">
+                    <i class="bi bi-funnel-fill me-1 text-primary"></i> Filtro por Estado de Conexión
+                </div>
+                <div class="p-2.5 border rounded-3 bg-body-tertiary mt-1">
+                    <div class="form-check small mb-1.5">
+                        <input class="form-check-input chk-filtro-agua" type="checkbox" id="filtroAgua_Normal" value="Normal" checked onchange="window.filtrarConexionesAguaMapa();">
+                        <label class="form-check-label d-flex align-items-center gap-2" for="filtroAgua_Normal">
+                            <span style="width:11px;height:11px;border-radius:50%;background-color:#10b981;display:inline-block;"></span>
+                            <span class="fw-medium">Normal (Al día)</span>
+                        </label>
+                    </div>
+                    <div class="form-check small mb-1.5">
+                        <input class="form-check-input chk-filtro-agua" type="checkbox" id="filtroAgua_ParaCorte" value="ParaCorte" checked onchange="window.filtrarConexionesAguaMapa();">
+                        <label class="form-check-label d-flex align-items-center gap-2" for="filtroAgua_ParaCorte">
+                            <span style="width:11px;height:11px;border-radius:50%;background-color:#f59e0b;display:inline-block;"></span>
+                            <span class="fw-medium text-warning">Para Corte (Mora)</span>
+                        </label>
+                    </div>
+                    <div class="form-check small mb-1.5">
+                        <input class="form-check-input chk-filtro-agua" type="checkbox" id="filtroAgua_Cortado" value="Cortado" checked onchange="window.filtrarConexionesAguaMapa();">
+                        <label class="form-check-label d-flex align-items-center gap-2" for="filtroAgua_Cortado">
+                            <span style="width:11px;height:11px;border-radius:50%;background-color:#ef4444;display:inline-block;"></span>
+                            <span class="fw-medium text-danger">Cortado (Suspendido)</span>
+                        </label>
+                    </div>
+                    <div class="form-check small mb-0">
+                        <input class="form-check-input chk-filtro-agua" type="checkbox" id="filtroAgua_BajaParcial" value="BajaParcial" checked onchange="window.filtrarConexionesAguaMapa();">
+                        <label class="form-check-label d-flex align-items-center gap-2" for="filtroAgua_BajaParcial">
+                            <span style="width:11px;height:11px;border-radius:50%;background-color:#64748b;display:inline-block;"></span>
+                            <span class="fw-medium text-muted">Baja Parcial (Precintado)</span>
+                        </label>
+                    </div>
+                </div>
+
                 @if (puedeCambiarMapaBase)
                 {
                     <!-- Sección Mapa Base -->

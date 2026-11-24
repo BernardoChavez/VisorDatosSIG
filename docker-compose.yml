@@ -1,0 +1,28 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sig-sqlserver
+    user: root
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=SqlAdmin2026*!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sig-sqlserver-data:/var/opt/mssql/data
+
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sig-sqlserver-init
+    depends_on:
+      - sqlserver
+    environment:
+      - MSSQL_SA_PASSWORD=SqlAdmin2026*!
+    volumes:
+      - ./01_BaseDatos:/scripts
+    entrypoint: ["/bin/bash", "-c", "tr -d '\\r' < /scripts/init-db.sh > /tmp/init-db.sh && bash /tmp/init-db.sh"]
+
+volumes:
+  sig-sqlserver-data:
+    name: sig-sqlserver-data

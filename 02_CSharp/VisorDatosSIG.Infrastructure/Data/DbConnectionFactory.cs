@@ -27,10 +27,10 @@ public class DbConnectionFactory : IDbConnectionFactory
     {
         // 1. Prioridad: Cadena suministrada
         // 2. Prioridad: Variable de entorno
-        // 3. Prioridad: Default SQL Express local
+        // 3. Prioridad: Default SQL Server local (Docker en localhost,1433)
         _cadenaConexion = cadenaConexion 
             ?? Environment.GetEnvironmentVariable("SQLCONNSTR_VisorDatosSIG_BD")
-            ?? "Server=.\\SQLEXPRESS;Database=VisorDatosSIG_BD;Integrated Security=True;TrustServerCertificate=True;Connect Timeout=30;";
+            ?? "Server=localhost,1433;Database=VisorDatosSIG_BD;User Id=sa;Password=SqlAdmin2026*!;TrustServerCertificate=True;Connect Timeout=30;";
     }
 
     public void ConfigurarCadenaConexion(string nuevaCadena)

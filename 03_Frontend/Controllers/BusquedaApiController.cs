@@ -30,10 +30,14 @@ public class BusquedaApiController : ControllerBase
             return BadRequest(new { mensaje = "El término de búsqueda no puede estar vacío." });
         }
 
+        string? capaFiltro = (string.IsNullOrWhiteSpace(capa) || capa.Equals("todas", StringComparison.OrdinalIgnoreCase))
+            ? null 
+            : capa.Trim();
+
         var request = new BusquedaRequestDto
         {
             Termino = q.Trim(),
-            Capa = string.IsNullOrWhiteSpace(capa) ? "todas" : capa,
+            Capa = capaFiltro,
             Pagina = pagina < 1 ? 1 : pagina,
             RegistrosPorPagina = registrosPorPagina < 1 ? 30 : registrosPorPagina
         };

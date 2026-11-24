@@ -50,6 +50,7 @@ builder.Services.AddScoped<IBusquedaRepository, BusquedaRepository>();
 builder.Services.AddScoped<IMigracionRepository, MigracionRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IBitacoraRepository, BitacoraRepository>();
+builder.Services.AddScoped<IAguaRepository, AguaRepository>();
 
 // Servicios de Dominio / Aplicación
 builder.Services.AddSingleton<IShapefileReader, ShapefileReader>();
@@ -58,6 +59,8 @@ builder.Services.AddScoped<IBusquedaService, BusquedaService>();
 builder.Services.AddScoped<IMigradorService, MigradorService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+builder.Services.AddScoped<IDijkstraRoutingService, DijkstraRoutingService>();
+builder.Services.AddScoped<IAguaService, AguaService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddResponseCompression(options =>

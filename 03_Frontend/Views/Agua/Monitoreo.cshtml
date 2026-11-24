@@ -1,0 +1,252 @@
+@model List<VisorDatosSIG.Application.DTOs.Agua.MonitoreoOperarioDto>
+@{
+    ViewData["Title"] = "Panel de Monitoreo GPS en Tiempo Real";
+}
+
+<div class="container-fluid px-3 px-md-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success px-3 py-2 fs-6 rounded-pill animate-pulse">
+                    <i class="bi bi-broadcast me-1"></i> Telemetría en Vivo
+                </span>
+                <span class="text-muted small" id="lblUltimoSync">Actualizando...</span>
+            </div>
+            <h1 class="h3 fw-bold mt-2 mb-1 text-main">Monitoreo Satelital de Operarios en Ruta</h1>
+            <p class="text-muted mb-0">Rastreo en tiempo real de cuadrillas de cortadores y reconectores con validación de posición y batería.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.cargarOperariosMonitoreo();" title="Refrescar datos ahora">
+                <i class="bi bi-arrow-clockwise"></i> Refrescar
+            </button>
+            <a asp-action="Asignaciones" class="btn btn-outline-primary">
+                <i class="bi bi-signpost-split me-1"></i> Ver Asignaciones
+            </a>
+            <a asp-action="Dashboard" class="btn btn-primary">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Layout: Map & Workers List -->
+    <div class="row g-3">
+        <!-- Mapa de Monitoreo -->
+        <div class="col-12 col-xl-8">
+            <div class="card sig-card border-0 shadow-sm overflow-hidden" style="height: 650px;">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-3 py-2 z-3 position-absolute top-0 start-0 end-0 bg-glass">
+                    <div class="small fw-bold text-main">
+                        <i class="bi bi-map-fill me-1 text-primary"></i> Visor de Operarios en Ruta
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-success" id="badgeOperariosOnline">0 en línea</span>
+                        <span class="badge bg-secondary" id="badgeTotalOperarios">0 totales</span>
+                    </div>
+                </div>
+                <div id="monitoreoMap" style="height: 100%; width: 100%; z-index: 1;"></div>
+            </div>
+        </div>
+
+        <!-- Lista Lateral de Operarios -->
+        <div class="col-12 col-xl-4">
+            <div class="card sig-card border-0 shadow-sm" style="height: 650px; display: flex; flex-direction: column;">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2">
+                    <h6 class="fw-bold text-main mb-0">Estado Operativo de las Cuadrillas</h6>
+                </div>
+                <div class="card-body px-3 py-2 flex-grow-1 overflow-auto" id="listaOperariosCards">
+                    <div class="text-center py-5 text-muted">
+                        <div class="spinner-border text-primary mb-2" role="status"></div>
+                        <div>Conectando con la red telemática...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .5; }
+    }
+    .operario-card {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .operario-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+</style>
+
+@section Scripts {
+<script>
+    let monMap = null;
+    let markersOperarios = {};
+    let syncInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initMonitoreoMap();
+        window.cargarOperariosMonitoreo();
+        // Auto-refresh cada 5 segundos
+        syncInterval = setInterval(window.cargarOperariosMonitoreo, 5000);
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (syncInterval) clearInterval(syncInterval);
+    });
+
+    function initMonitoreoMap() {
+        monMap = L.map('monitoreoMap', {
+            zoomControl: true
+        }).setView([-12.09450, -77.03550], 15);
+
+        // OpenStreetMap Base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors | VisorDatosSIG 2026'
+        }).addTo(monMap);
+
+        // Cargar ejes de calles en segundo plano para contexto
+        fetch('/api/capas/Vias/geojson')
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.features) {
+                    L.geoJSON(data, {
+                        style: {
+                            color: '#3b82f6',
+                            weight: 3,
+                            opacity: 0.6
+                        }
+                    }).addTo(monMap);
+                }
+            }).catch(e => console.warn('No se pudo cargar red vial secundaria:', e));
+    }
+
+    window.cargarOperariosMonitoreo = async function() {
+        try {
+            const res = await fetch('/api/agua/monitoreo/operarios');
+            if (!res.ok) throw new Error('Error al consultar telemetría');
+            const operarios = await res.json();
+
+            document.getElementById('lblUltimoSync').innerText = `Sincronizado: ${new Date().toLocaleTimeString()}`;
+            document.getElementById('badgeTotalOperarios').innerText = `${operarios.length} totales`;
+            const onlineCount = operarios.filter(o => o.enLinea).length;
+            document.getElementById('badgeOperariosOnline').innerText = `${onlineCount} en línea`;
+
+            renderOperariosCards(operarios);
+            renderOperariosMarkers(operarios);
+        } catch (e) {
+            console.error('Error en monitoreo:', e);
+        }
+    };
+
+    function renderOperariosCards(operarios) {
+        const container = document.getElementById('listaOperariosCards');
+        if (operarios.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted">No hay operarios registrados en el sistema.</div>';
+            return;
+        }
+
+        let html = '';
+        operarios.forEach(op => {
+            const batColor = op.bateriaPorcentaje > 50 ? 'text-success' : (op.bateriaPorcentaje > 20 ? 'text-warning' : 'text-danger');
+            const batIcon = op.bateriaPorcentaje > 70 ? 'bi-battery-full' : (op.bateriaPorcentaje > 25 ? 'bi-battery-half' : 'bi-battery');
+
+            html += `
+                <div class="card p-3 mb-2 rounded-3 border operario-card bg-body-tertiary" onclick="window.centrarEnOperario(${op.latitud}, ${op.longitud}, '${op.codigoTrabajador}');">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <span class="badge ${op.tipoTrabajador === 'Cortador' ? 'bg-warning text-dark' : 'bg-info text-dark'} me-1">${op.tipoTrabajador}</span>
+                            <strong class="text-main">${op.nombreCompleto}</strong>
+                            <div class="small text-muted font-monospace">${op.codigoTrabajador} &bull; ${op.vehiculo || 'A pie'}</div>
+                        </div>
+                        <span class="badge ${op.enLinea ? 'bg-success' : 'bg-secondary'}">
+                            ${op.enLinea ? 'En línea' : 'Desconectado'}
+                        </span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2 small text-muted pt-2 border-top">
+                        <div>
+                            <i class="bi bi-speedometer2 me-1"></i> ${Number(op.velocidadKmH).toFixed(1)} km/h
+                        </div>
+                        <div class="${batColor} fw-bold">
+                            <i class="bi ${batIcon} me-1"></i> ${op.bateriaPorcentaje}%
+                        </div>
+                        <div>
+                            <i class="bi bi-geo-alt me-1"></i> &plusmn;${Number(op.precisionM).toFixed(1)}m
+                        </div>
+                    </div>
+
+                    ${op.codigoAsignacion ? `
+                        <div class="mt-2 p-1.5 rounded bg-primary bg-opacity-10 small d-flex justify-content-between align-items-center">
+                            <span><strong class="text-primary">${op.codigoAsignacion}</strong> (${op.tipoServicio})</span>
+                            <span class="badge bg-primary">${op.puntosCompletados || 0}/${op.cantidadPuntos || 0} pts</span>
+                        </div>
+                    ` : '<div class="mt-1 small text-muted fst-italic">Sin orden de ruta activa</div>'}
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function renderOperariosMarkers(operarios) {
+        if (!monMap) return;
+
+        operarios.forEach(op => {
+            const latlng = [op.latitud, op.longitud];
+            const color = op.tipoTrabajador === 'Cortador' ? '#f59e0b' : '#0284c7';
+            const iconSvg = op.vehiculo === 'Moto' ? '🛵' : (op.vehiculo === 'Camioneta' ? '🛻' : '🚶');
+
+            const customIcon = L.divIcon({
+                className: 'custom-worker-marker',
+                html: `
+                    <div style="background-color: ${color}; width: 36px; height: 36px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white;">
+                        ${iconSvg}
+                    </div>
+                `,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18],
+                popupAnchor: [0, -18]
+            });
+
+            const popupContent = `
+                <div style="min-width: 180px;">
+                    <div style="font-weight: bold; font-size: 14px;">${op.nombreCompleto}</div>
+                    <div style="color: #64748b; font-size: 12px; margin-bottom: 6px;">${op.codigoTrabajador} - ${op.tipoTrabajador}</div>
+                    <div style="font-size: 12px;"><strong>Vehículo:</strong> ${op.vehiculo || 'A pie'}</div>
+                    <div style="font-size: 12px;"><strong>Velocidad:</strong> ${Number(op.velocidadKmH).toFixed(1)} km/h</div>
+                    <div style="font-size: 12px;"><strong>Batería:</strong> ${op.bateriaPorcentaje}%</div>
+                    <div style="font-size: 12px;"><strong>Asignación:</strong> ${op.codigoAsignacion || 'Ninguna'}</div>
+                </div>
+            `;
+
+            if (markersOperarios[op.idTrabajador]) {
+                markersOperarios[op.idTrabajador].setLatLng(latlng);
+                markersOperarios[op.idTrabajador].setPopupContent(popupContent);
+            } else {
+                const marker = L.marker(latlng, { icon: customIcon }).addTo(monMap);
+                marker.bindPopup(popupContent);
+                markersOperarios[op.idTrabajador] = marker;
+            }
+        });
+    }
+
+    window.centrarEnOperario = function(lat, lon, codigo) {
+        if (!monMap) return;
+        monMap.setView([lat, lon], 17, { animate: true });
+        // Buscar y abrir popup
+        for (let id in markersOperarios) {
+            const m = markersOperarios[id];
+            if (m.getLatLng().lat === lat && m.getLatLng().lng === lon) {
+                m.openPopup();
+                break;
+            }
+        }
+    };
+</script>
+}

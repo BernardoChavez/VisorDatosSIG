@@ -1,0 +1,489 @@
+@model List<VisorDatosSIG.Application.DTOs.Agua.AsignacionDto>
+@{
+    ViewData["Title"] = "Gestión de Asignaciones y Rutas Óptimas (Dijkstra)";
+    var trabajadores = ViewBag.Trabajadores as List<VisorDatosSIG.Application.DTOs.Agua.TrabajadorDto> ?? new();
+}
+
+<div class="container-fluid px-3 px-md-4 py-4 pb-5 mb-5">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">
+                    <i class="bi bi-signpost-2 me-1"></i> Planificación de Rutas Óptimas
+                </span>
+                <span class="badge bg-dark">Algoritmo de Dijkstra en Red Vial</span>
+            </div>
+            <h1 class="h3 fw-bold mt-2 mb-1 text-main">Asignaciones de Corte y Reconexión</h1>
+            <p class="text-muted mb-0">Seleccione el operario, defina el lote de trabajo y calcule el recorrido óptimo que respeta la red de calles sin cruzar manzanas.</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#panelNuevaAsignacion" aria-expanded="true">
+                <i class="bi bi-plus-lg me-1"></i> Nueva Asignación
+            </button>
+        </div>
+    </div>
+
+    <!-- Panel de Creación / Cálculo de Asignación -->
+    <div class="collapse show mb-4" id="panelNuevaAsignacion">
+        <div class="card sig-card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold text-main mb-1"><i class="bi bi-calculator me-2 text-primary"></i>Generador de Rutas con Algoritmo de Dijkstra</h5>
+                <p class="text-muted small mb-0">Las rutas calculadas circulan estrictamente sobre la capa de vías urbanas (WGS 84 SRID 4326).</p>
+            </div>
+            <div class="card-body px-4 py-4">
+                <div class="row g-4">
+                    <!-- Formulario de Parámetros -->
+                    <div class="col-12 col-lg-5">
+                        <form id="formNuevaAsignacion" onsubmit="event.preventDefault(); window.calcularRutaDijkstra();">
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted">TIPO DE SERVICIO</label>
+                                    <select class="form-select" id="selectTipoServicio" onchange="window.filtrarTrabajadoresYCandidatos();">
+                                        <option value="Corte" selected>Corte de Servicio (Mora)</option>
+                                        <option value="Reconexion">Reconexión de Servicio</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted">OPERARIO ASIGNADO</label>
+                                    <select class="form-select" id="selectTrabajador" required>
+                                        <option value="">Seleccione un operario...</option>
+                                        @foreach (var t in trabajadores)
+                                        {
+                                            <option value="@t.IdTrabajador" data-tipo="@t.TipoTrabajador">
+                                                @t.NombreCompleto (@t.TipoTrabajador - @t.Vehiculo)
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted">PUNTO DE PARTIDA</label>
+                                    <input type="text" class="form-control" id="inputPuntoPartidaNombre" value="Almacén Central / Base Operativa" />
+                                </div>
+
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted">CANTIDAD DE PUNTOS</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="inputCantidadPuntos" value="5" min="1" max="25" />
+                                        <button class="btn btn-outline-secondary" type="button" onclick="window.cargarCandidatos();">
+                                            <i class="bi bi-arrow-repeat"></i> Cargar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">LONGITUD PARTIDA</label>
+                                    <input type="number" step="0.000001" class="form-control font-monospace" id="inputPartidaLon" value="-77.03450" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">LATITUD PARTIDA</label>
+                                    <input type="number" step="0.000001" class="form-control font-monospace" id="inputPartidaLat" value="-12.09350" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">NOTAS / INSTRUCCIONES DE RUTA</label>
+                                    <textarea class="form-control" id="inputNotas" rows="2" placeholder="Ej. Realizar cortes con precinto de seguridad..."></textarea>
+                                </div>
+
+                                <div class="col-12 d-flex gap-2 pt-2">
+                                    <button type="submit" class="btn btn-primary flex-grow-1" id="btnCalcularRuta">
+                                        <i class="bi bi-cpu-fill me-1"></i> Calcular Ruta Óptima
+                                    </button>
+                                    <button type="button" class="btn btn-success flex-grow-1" id="btnGuardarAsignacion" onclick="window.guardarAsignacionOficial();" disabled>
+                                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Guardar Asignación
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de Puntos Candidatos y Previsualización de la Ruta -->
+                    <div class="col-12 col-lg-7">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-bold text-muted">CONEXIONES CANDIDATAS SELECCIONADAS</span>
+                            <span class="badge bg-secondary" id="badgeTotalSeleccionados">0 seleccionadas</span>
+                        </div>
+                        <div class="table-responsive border rounded-3 mb-3" style="max-height: 220px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="tablaCandidatos">
+                                <thead class="table-light sticky-top">
+                                    <tr class="small text-muted">
+                                        <th style="width: 35px;"><input type="checkbox" id="chkSelectAll" checked onchange="window.toggleSelectAll(this);" /></th>
+                                        <th>CÓDIGO</th>
+                                        <th>MEDIDOR</th>
+                                        <th>TITULAR</th>
+                                        <th>DIRECCIÓN</th>
+                                        <th class="text-end">DEUDA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyCandidatos">
+                                    <tr><td colspan="6" class="text-center py-3 text-muted">Haga clic en 'Cargar' para obtener candidatos de corte/reconexión.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Resumen del Cálculo de Dijkstra -->
+                        <div id="resultadoDijkstraBox" class="p-3 rounded-3 bg-body-tertiary border d-none">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge bg-success me-2">Ruta Optimizada</span>
+                                    <strong id="resPuntosCount">0 puntos ordenados</strong>
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-muted small">Distancia Total Red Vial:</span>
+                                    <span class="fs-5 fw-bold text-primary" id="resDistanciaTotal">0.00 m</span>
+                                </div>
+                            </div>
+                            <ol class="list-group list-group-numbered small" id="listaSecuenciaDijkstra" style="max-height: 140px; overflow-y: auto;">
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Asignaciones -->
+    <div class="card sig-card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-main mb-0">Órdenes de Asignación Registradas</h5>
+            <span class="badge bg-secondary">Total: @Model.Count</span>
+        </div>
+        <div class="card-body px-4 py-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr class="text-muted small">
+                            <th>CÓDIGO</th>
+                            <th>FECHA</th>
+                            <th>SERVICIO</th>
+                            <th>OPERARIO</th>
+                            <th class="text-center">PUNTOS</th>
+                            <th class="text-center">PROGRESO</th>
+                            <th class="text-end">DISTANCIA</th>
+                            <th class="text-center">ESTADO</th>
+                            <th class="text-end">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
+                        {
+                            <tr><td colspan="9" class="text-center py-4 text-muted">No existen asignaciones registradas en el sistema.</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var a in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-primary">@a.CodigoAsignacion</td>
+                                    <td>@a.FechaAsignacion.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <span class="badge @(a.TipoServicio == "Corte" ? "bg-warning text-dark" : "bg-info text-dark")">
+                                            @a.TipoServicio
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-medium">@a.NombreTrabajador</div>
+                                        <div class="small text-muted">@a.TipoTrabajador</div>
+                                    </td>
+                                    <td class="text-center fw-bold">@a.CantidadPuntos</td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                            <span class="fw-bold">@a.PuntosCompletados / @a.CantidadPuntos</span>
+                                            @if (a.CantidadPuntos > 0)
+                                            {
+                                                var pct = (int)Math.Round(a.PuntosCompletados * 100.0 / a.CantidadPuntos);
+                                                <span class="badge @(pct == 100 ? "bg-success" : "bg-secondary")">@pct%</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="text-end font-monospace">@a.DistanciaTotalMetros.ToString("N1") m</td>
+                                    <td class="text-center">
+                                        @if (a.Estado == "Pendiente")
+                                        {
+                                            <span class="badge bg-secondary">Pendiente</span>
+                                        }
+                                        else if (a.Estado == "EnProgreso")
+                                        {
+                                            <span class="badge bg-warning text-dark">En Progreso</span>
+                                        }
+                                        else if (a.Estado == "Completada")
+                                        {
+                                            <span class="badge bg-success">Completada</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">@a.Estado</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="window.verDetalleAsignacion(@a.IdAsignacion);" title="Ver Detalle y Puntos de Ruta">
+                                            <i class="bi bi-eye-fill"></i> Detalle
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Asignación -->
+<div class="modal fade" id="modalDetalleAsignacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content sig-card">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalTituloAsig">Detalle de Asignación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-3" id="modalCabeceraAsig"></div>
+                <h6 class="fw-bold text-muted small mt-3">SECUENCIA DE RECORRIDO EN CALPO (DIJKSTRA)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr class="small text-muted">
+                                <th>ORDEN</th>
+                                <th>MEDIDOR</th>
+                                <th>TITULAR</th>
+                                <th>DIRECCIÓN</th>
+                                <th>ESTADO</th>
+                                <th>VALIDACIÓN GPS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTbodyPuntos"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let candidatosCargados = [];
+    let ultimaRutaCalculada = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.filtrarTrabajadoresYCandidatos();
+        window.cargarCandidatos();
+    });
+
+    window.filtrarTrabajadoresYCandidatos = function() {
+        const tipoServicio = document.getElementById('selectTipoServicio').value;
+        const tipoRequerido = tipoServicio === 'Corte' ? 'Cortador' : 'Reconector';
+
+        const select = document.getElementById('selectTrabajador');
+        for (let i = 1; i < select.options.length; i++) {
+            const opt = select.options[i];
+            const optTipo = opt.getAttribute('data-tipo');
+            if (optTipo === tipoRequerido) {
+                opt.style.display = '';
+                if (!select.value) select.value = opt.value;
+            } else {
+                opt.style.display = 'none';
+            }
+        }
+        window.cargarCandidatos();
+    };
+
+    window.cargarCandidatos = async function() {
+        const tipoServicio = document.getElementById('selectTipoServicio').value;
+        const cantidad = document.getElementById('inputCantidadPuntos').value || 5;
+        const lon = document.getElementById('inputPartidaLon').value;
+        const lat = document.getElementById('inputPartidaLat').value;
+
+        const tbody = document.getElementById('tbodyCandidatos');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Consultando candidatos prioritarios...</td></tr>';
+
+        try {
+            const res = await fetch(`/api/agua/candidatos?tipoServicio=${tipoServicio}&cantidad=${cantidad}&lon=${lon}&lat=${lat}`);
+            if (!res.ok) throw new Error('Error al consultar candidatos');
+            candidatosCargados = await res.json();
+
+            if (candidatosCargados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">No existen conexiones candidatas pendientes para este servicio.</td></tr>';
+                document.getElementById('badgeTotalSeleccionados').innerText = '0 seleccionadas';
+                return;
+            }
+
+            let html = '';
+            candidatosCargados.forEach((c, idx) => {
+                html += `
+                    <tr>
+                        <td><input type="checkbox" class="chk-candidato" value="${c.idConexion}" checked onchange="window.actualizarContador();" /></td>
+                        <td class="fw-bold">${c.codigoConexion}</td>
+                        <td><span class="badge bg-light text-dark border">${c.numeroMedidor}</span></td>
+                        <td>${c.titular}</td>
+                        <td class="small text-muted">${c.direccion}</td>
+                        <td class="text-end fw-bold text-danger">Bs. ${Number(c.saldoPendiente).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+            window.actualizarContador();
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-danger">${e.message}</td></tr>`;
+        }
+    };
+
+    window.toggleSelectAll = function(chk) {
+        document.querySelectorAll('.chk-candidato').forEach(c => c.checked = chk.checked);
+        window.actualizarContador();
+    };
+
+    window.actualizarContador = function() {
+        const sel = document.querySelectorAll('.chk-candidato:checked').length;
+        document.getElementById('badgeTotalSeleccionados').innerText = `${sel} seleccionadas`;
+    };
+
+    window.calcularRutaDijkstra = async function() {
+        const checked = Array.from(document.querySelectorAll('.chk-candidato:checked')).map(c => parseInt(c.value));
+        if (checked.length === 0) {
+            alert('Debe seleccionar al menos una conexión candidata.');
+            return;
+        }
+
+        const btn = document.getElementById('btnCalcularRuta');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Optimizando en Red Vial...';
+
+        try {
+            const partidaLon = parseFloat(document.getElementById('inputPartidaLon').value);
+            const partidaLat = parseFloat(document.getElementById('inputPartidaLat').value);
+
+            const res = await fetch('/api/agua/dijkstra/previsualizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    partidaLon: partidaLon,
+                    partidaLat: partidaLat,
+                    idsConexiones: checked
+                })
+            });
+
+            if (!res.ok) throw new Error('Error al calcular la ruta con Dijkstra');
+            ultimaRutaCalculada = await res.json();
+
+            // Mostrar resultados
+            const box = document.getElementById('resultadoDijkstraBox');
+            box.classList.remove('d-none');
+            document.getElementById('resPuntosCount').innerText = `${ultimaRutaCalculada.puntosOrdenados.length} paradas calculadas`;
+            document.getElementById('resDistanciaTotal').innerText = `${Number(ultimaRutaCalculada.distanciaTotalMetros).toLocaleString('es-BO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m`;
+
+            const ol = document.getElementById('listaSecuenciaDijkstra');
+            ol.innerHTML = '';
+            ultimaRutaCalculada.puntosOrdenados.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center py-1';
+                li.innerHTML = `
+                    <span><strong>${p.codigoConexion}</strong> (Parada #${p.ordenSecuencia})</span>
+                    <span class="badge bg-primary rounded-pill">+${Number(p.distanciaTramoMetros).toFixed(1)} m</span>
+                `;
+                ol.appendChild(li);
+            });
+
+            document.getElementById('btnGuardarAsignacion').disabled = false;
+        } catch (e) {
+            alert('Error al calcular ruta: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Calcular Ruta Óptima';
+        }
+    };
+
+    window.guardarAsignacionOficial = async function() {
+        if (!ultimaRutaCalculada || !ultimaRutaCalculada.puntosOrdenados) {
+            alert('Primero debe calcular la ruta óptima.');
+            return;
+        }
+
+        const idTrabajador = parseInt(document.getElementById('selectTrabajador').value);
+        if (!idTrabajador) {
+            alert('Debe seleccionar un operario.');
+            return;
+        }
+
+        const btn = document.getElementById('btnGuardarAsignacion');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
+
+        try {
+            const payload = {
+                idTrabajador: idTrabajador,
+                tipoServicio: document.getElementById('selectTipoServicio').value,
+                puntoPartidaNombre: document.getElementById('inputPuntoPartidaNombre').value,
+                puntoPartidaLon: parseFloat(document.getElementById('inputPartidaLon').value),
+                puntoPartidaLat: parseFloat(document.getElementById('inputPartidaLat').value),
+                idConexiones: ultimaRutaCalculada.puntosOrdenados.map(p => p.idConexion),
+                notas: document.getElementById('inputNotas').value
+            };
+
+            const res = await fetch('/api/agua/asignaciones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error('Error al registrar la asignación');
+            const data = await res.json();
+
+            alert(`¡Asignación ${data.codigoAsignacion} creada exitosamente con ${data.cantidadPuntos} puntos en orden 1, 2, 3...! Ya está disponible para la app móvil.`);
+            window.location.reload();
+        } catch (e) {
+            alert('Error al guardar asignación: ' + e.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Guardar Asignación';
+        }
+    };
+
+    window.verDetalleAsignacion = async function(id) {
+        try {
+            const res = await fetch(`/api/agua/asignaciones/${id}`);
+            if (!res.ok) throw new Error('No se pudo obtener el detalle de la asignación');
+            const a = await res.json();
+
+            document.getElementById('modalTituloAsig').innerText = `Asignación ${a.codigoAsignacion}`;
+            document.getElementById('modalCabeceraAsig').innerHTML = `
+                <div class="col-6 col-md-3"><strong>Operario:</strong> <div>${a.nombreTrabajador} (${a.tipoTrabajador})</div></div>
+                <div class="col-6 col-md-3"><strong>Tipo:</strong> <div>${a.tipoServicio}</div></div>
+                <div class="col-6 col-md-3"><strong>Puntos:</strong> <div>${a.puntosCompletados} de ${a.cantidadPuntos} ejecutados</div></div>
+                <div class="col-6 col-md-3"><strong>Distancia Total:</strong> <div>${Number(a.distanciaTotalMetros).toFixed(1)} m</div></div>
+            `;
+
+            const tbody = document.getElementById('modalTbodyPuntos');
+            tbody.innerHTML = '';
+            a.puntos.forEach(p => {
+                let badgeGps = '<span class="badge bg-secondary">Sin validar</span>';
+                if (p.validacionGpsExitosa === true) {
+                    badgeGps = `<span class="badge bg-success"><i class="bi bi-geo-alt-fill me-1"></i>En sitio (${Number(p.distanciaValidacionGpsM).toFixed(1)}m)</span>`;
+                } else if (p.validacionGpsExitosa === false) {
+                    badgeGps = `<span class="badge bg-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i>Lejos (${Number(p.distanciaValidacionGpsM).toFixed(1)}m)</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold text-center">#${p.ordenSecuencia}</td>
+                        <td>${p.codigoConexion} <small class="text-muted">(${p.numeroMedidor})</small></td>
+                        <td>${p.titular}</td>
+                        <td class="small text-muted">${p.direccion}</td>
+                        <td><span class="badge ${p.estado === 'Ejecutado' ? 'bg-success' : (p.estado === 'CasaCerrada' ? 'bg-warning text-dark' : 'bg-secondary')}">${p.estado}</span></td>
+                        <td>${badgeGps}</td>
+                    </tr>
+                `;
+            });
+
+            new bootstrap.Modal(document.getElementById('modalDetalleAsignacion')).show();
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    };
+</script>
+}

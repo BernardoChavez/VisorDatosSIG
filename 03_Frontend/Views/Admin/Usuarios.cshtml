@@ -79,6 +79,14 @@
 
     <!-- Tabla de Usuarios -->
     <div class="card sig-admin-card shadow-sm border-0">
+        <div class="card-header bg-transparent py-3 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+            <h6 class="fw-bold mb-0 text-secondary"><i class="bi bi-list-ul me-1"></i>Listado de Cuentas de Acceso</h6>
+            <div class="input-group sig-nav-search" style="max-width: 340px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="filtroUsuariosTabla" class="form-control form-control-sm" placeholder="Buscar por usuario, nombre, rol o email..." autocomplete="off">
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnLimpiarFiltroUsuarios" title="Limpiar"><i class="bi bi-x-lg"></i></button>
+            </div>
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle sig-table text-nowrap">
@@ -95,7 +103,7 @@
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="cuerpoTablaUsuarios">
                         @if (Model == null || Model.Count == 0)
                         {
                             <tr>
@@ -573,5 +581,28 @@
             alert('Error al conectar con el servidor.');
         }
     }
+
+    // Filtro en vivo para la tabla de usuarios
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputFiltro = document.getElementById('filtroUsuariosTabla');
+        const btnLimpiar = document.getElementById('btnLimpiarFiltroUsuarios');
+        if (inputFiltro) {
+            inputFiltro.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const filas = document.querySelectorAll('#cuerpoTablaUsuarios tr');
+                filas.forEach(f => {
+                    const texto = f.textContent.toLowerCase();
+                    f.style.display = texto.includes(query) ? '' : 'none';
+                });
+            });
+        }
+        if (btnLimpiar && inputFiltro) {
+            btnLimpiar.addEventListener('click', function() {
+                inputFiltro.value = '';
+                inputFiltro.dispatchEvent(new Event('input'));
+                inputFiltro.focus();
+            });
+        }
+    });
 </script>
 }

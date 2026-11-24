@@ -17,12 +17,12 @@ internal class Program
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("================================================================================");
-        Console.WriteLine("   VisorDatosSIG 2026 — Suite Automatizada de Criterios de Aceptación (CA-01 a CA-12)");
+        Console.WriteLine("   VisorDatosSIG 2026 — Suite Automatizada de Criterios de Aceptación (CA-01 a CA-17)");
         Console.WriteLine("================================================================================\n");
         Console.ResetColor();
 
         var stopwatchTotal = Stopwatch.StartNew();
-        int totalTests = 13;
+        int totalTests = 17;
         int passedTests = 0;
         int failedTests = 0;
 
@@ -65,6 +65,9 @@ internal class Program
             var busqService = new BusquedaService(busqRepo);
             var uRepo = new UsuarioRepository(dbFactory);
             var authService = new AuthService(uRepo, audService);
+            var aguaRepo = new AguaRepository(dbFactory);
+            var dijkstraService = new DijkstraRoutingService(aguaRepo);
+            var aguaService = new AguaService(aguaRepo, dijkstraService);
 
             Console.WriteLine("[INFO] Servicios inicializados correctamente contra SQL Server.\n");
 
@@ -137,6 +140,29 @@ internal class Program
 
             await EjecutarPrueba("CA-13: Creación de usuarios con permisos granulares dinámicos (PBAC)", async () => {
                 await CriteriosAceptacionTests.Test_CA13_PermisosGranularesYPersonalizacionAsync(authService);
+            });
+            passedTests++;
+
+            // Restablecer entorno y semillas del módulo de agua para aislamiento total
+            await CriteriosAceptacionTests.ResetTestDataAguaAsync(dbFactory);
+
+            await EjecutarPrueba("CA-14: Dominio de Agua Potable (Conexiones, estados Normal/ParaCorte/Cortado, operarios)", async () => {
+                await CriteriosAceptacionTests.Test_CA14_ModuloAguaDominioYConexionesAsync(aguaService);
+            });
+            passedTests++;
+
+            await EjecutarPrueba("CA-15: Dijkstra en Red Vial dbo.Vias (Ruta secuencial 1,2,3... sin atravesar manzanas)", async () => {
+                await CriteriosAceptacionTests.Test_CA15_DijkstraRoutingRedVialAsync(aguaService, dijkstraService);
+            });
+            passedTests++;
+
+            await EjecutarPrueba("CA-16: Asignación de trabajo y validación geodésica GPS en campo (<=60m / CasaCerrada)", async () => {
+                await CriteriosAceptacionTests.Test_CA16_AsignacionesYValidacionGpsCampoAsync(aguaService);
+            });
+            passedTests++;
+
+            await EjecutarPrueba("CA-17: Monitoreo GPS y telemetría de operarios en tiempo real para panel de control", async () => {
+                await CriteriosAceptacionTests.Test_CA17_MonitoreoTiempoRealAsync(aguaService);
             });
             passedTests++;
         }

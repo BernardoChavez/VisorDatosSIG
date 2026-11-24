@@ -271,11 +271,22 @@ const SigMap = {
                     };
                 },
                 pointToLayer: (feature, latlng) => {
-                    const color = config ? config.colorFondo : '#ef4444';
-                    const borde = config ? config.colorBorde : '#ffffff';
+                    let color = config ? config.colorFondo : '#ef4444';
+                    let borde = config ? config.colorBorde : '#ffffff';
+                    let radius = 7;
+
+                    if (feature.properties && feature.properties.estadoConexion) {
+                        const st = feature.properties.estadoConexion;
+                        if (st === 'Normal') color = '#10b981';       // Verde (Al día)
+                        else if (st === 'ParaCorte') color = '#f59e0b'; // Amarillo/Naranja (Para corte)
+                        else if (st === 'Cortado') color = '#ef4444';   // Rojo (Cortado)
+                        else if (st === 'BajaParcial') color = '#64748b'; // Gris (Baja parcial)
+                        radius = 8;
+                    }
+
                     return L.circleMarker(latlng, {
                         pane: targetPane,
-                        radius: 7,
+                        radius: radius,
                         fillColor: color,
                         color: borde,
                         weight: 2,
@@ -1023,6 +1034,24 @@ const SigMap = {
         if (typeof showToast === 'function') {
             showToast('Información', `No se encontraron geometrías para la capa ${nombreCapa}.`, 'warning');
         }
+    }
+};
+
+// Filtro interactivo de Conexiones de Agua según su estado (Normal, ParaCorte, Cortado, BajaParcial)
+window.filtrarConexionesAguaMapa = function() {
+    const checks = Array.from(document.querySelectorAll('.chk-filtro-agua:checked')).map(c => c.value);
+    const layer = SigMap.vectorLayers ? SigMap.vectorLayers['ConexionesAgua'] : null;
+    if (layer) {
+        layer.eachLayer(function(l) {
+            if (l.feature && l.feature.properties && l.feature.properties.estadoConexion) {
+                const st = l.feature.properties.estadoConexion;
+                if (checks.includes(st)) {
+                    l.setStyle({ opacity: 1, fillOpacity: 0.95 });
+                } else {
+                    l.setStyle({ opacity: 0, fillOpacity: 0 });
+                }
+            }
+        });
     }
 };
 

@@ -142,12 +142,12 @@ public partial class MainMigradorForm : Form
         };
 
         var lblServ = new Label { Text = "Servidor:", Location = new Point(15, 28), AutoSize = true, Font = new Font("Segoe UI", 9f) };
-        txtServidor = new TextBox { Text = ".\\SQLEXPRESS", Location = new Point(75, 25), Width = 150, Font = new Font("Segoe UI", 9f) };
+        txtServidor = new TextBox { Text = "localhost,1433", Location = new Point(75, 25), Width = 150, Font = new Font("Segoe UI", 9f) };
 
         var lblBd = new Label { Text = "Base Datos:", Location = new Point(235, 28), AutoSize = true, Font = new Font("Segoe UI", 9f) };
         txtBaseDatos = new TextBox { Text = "VisorDatosSIG_BD", Location = new Point(310, 25), Width = 150, Font = new Font("Segoe UI", 9f) };
 
-        chkSeguridadIntegrada = new CheckBox { Text = "Seguridad Integrada (Windows)", Checked = true, Location = new Point(475, 26), AutoSize = true, Font = new Font("Segoe UI", 9f) };
+        chkSeguridadIntegrada = new CheckBox { Text = "Seguridad Integrada (Windows)", Checked = false, Location = new Point(475, 26), AutoSize = true, Font = new Font("Segoe UI", 9f) };
         chkSeguridadIntegrada.CheckedChanged += (s, e) =>
         {
             txtUsuarioSql.Enabled = !chkSeguridadIntegrada.Checked;
@@ -155,10 +155,10 @@ public partial class MainMigradorForm : Form
         };
 
         var lblUsr = new Label { Text = "Usuario:", Location = new Point(680, 28), AutoSize = true, Font = new Font("Segoe UI", 9f) };
-        txtUsuarioSql = new TextBox { Location = new Point(735, 25), Width = 90, Enabled = false, Font = new Font("Segoe UI", 9f) };
+        txtUsuarioSql = new TextBox { Text = "sa", Location = new Point(735, 25), Width = 90, Enabled = true, Font = new Font("Segoe UI", 9f) };
 
         var lblPass = new Label { Text = "Clave:", Location = new Point(835, 28), AutoSize = true, Font = new Font("Segoe UI", 9f) };
-        txtPasswordSql = new TextBox { Location = new Point(880, 25), Width = 90, UseSystemPasswordChar = true, Enabled = false, Font = new Font("Segoe UI", 9f) };
+        txtPasswordSql = new TextBox { Text = "SqlAdmin2026*!", Location = new Point(880, 25), Width = 90, UseSystemPasswordChar = true, Enabled = true, Font = new Font("Segoe UI", 9f) };
 
         btnProbarConexion = new Button
         {

@@ -28,7 +28,10 @@ public class BusquedaRepository : IBusquedaRepository
         };
 
         cmd.Parameters.AddWithValue("@Termino", termino);
-        cmd.Parameters.AddWithValue("@Capa", string.IsNullOrWhiteSpace(capa) ? (object)DBNull.Value : capa);
+        object capaParam = (string.IsNullOrWhiteSpace(capa) || capa.Equals("todas", StringComparison.OrdinalIgnoreCase))
+            ? DBNull.Value 
+            : (object)capa;
+        cmd.Parameters.AddWithValue("@Capa", capaParam);
         cmd.Parameters.AddWithValue("@Pagina", pagina);
         cmd.Parameters.AddWithValue("@RegistrosPorPagina", registrosPorPagina);
 

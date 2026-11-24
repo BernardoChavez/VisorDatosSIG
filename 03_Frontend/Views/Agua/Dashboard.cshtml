@@ -1,0 +1,242 @@
+@model VisorDatosSIG.Application.DTOs.Agua.DashboardAguaDto
+@{
+    ViewData["Title"] = "Dashboard General de Agua Potable";
+}
+
+<div class="container-fluid px-3 px-md-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">
+                    <i class="bi bi-droplet-half me-1"></i> Módulo de Cortes y Reconexiones
+                </span>
+                <span class="text-muted small">UAGRM 2/2026</span>
+            </div>
+            <h1 class="h3 fw-bold mt-2 mb-1 text-main">Dashboard General del Servicio</h1>
+            <p class="text-muted mb-0">Estadísticas territoriales de conexiones, corte por mora y seguimiento de operarios.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-map-fill me-1"></i> Ver en Mapa General
+            </a>
+            <a asp-controller="Agua" asp-action="Asignaciones" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Nueva Asignación
+            </a>
+            <a asp-controller="Agua" asp-action="Monitoreo" class="btn btn-success">
+                <i class="bi bi-broadcast me-1"></i> Monitoreo en Vivo
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards Grid -->
+    <div class="row g-3 mb-4">
+        <!-- Total Conexiones -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card sig-kpi-card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="sig-kpi-icon bg-primary bg-opacity-10 text-primary rounded-4 p-3 fs-3">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">Total Conexiones</div>
+                        <div class="fs-2 fw-bold text-main">@Model.TotalConexiones</div>
+                        <div class="small text-success"><i class="bi bi-check-circle-fill me-1"></i>100% Georreferenciadas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Para Corte -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card sig-kpi-card h-100 border-0 shadow-sm border-start border-warning border-4">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="sig-kpi-icon bg-warning bg-opacity-10 text-warning rounded-4 p-3 fs-3">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">Conexiones Para Corte</div>
+                        <div class="fs-2 fw-bold text-warning">@Model.ConexionesParaCorte</div>
+                        <div class="small text-muted">Mora &gt; 2 meses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cortadas -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card sig-kpi-card h-100 border-0 shadow-sm border-start border-danger border-4">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="sig-kpi-icon bg-danger bg-opacity-10 text-danger rounded-4 p-3 fs-3">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">Servicio Cortado</div>
+                        <div class="fs-2 fw-bold text-danger">@Model.ConexionesCortadas</div>
+                        <div class="small text-muted">Aptas para reconexión</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deuda en Mora -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card sig-kpi-card h-100 border-0 shadow-sm border-start border-info border-4">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="sig-kpi-icon bg-info bg-opacity-10 text-info rounded-4 p-3 fs-3">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">Deuda Total en Mora</div>
+                        <div class="fs-2 fw-bold text-info">Bs. @Model.DeudaTotalCorte.ToString("N2")</div>
+                        <div class="small text-muted">Por recuperar en campo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row: Operational Status & Distribution -->
+    <div class="row g-4 mb-4">
+        <!-- Distribution by Status -->
+        <div class="col-12 col-lg-7">
+            <div class="card sig-card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-main">Estado Territorial del Parque de Conexiones</h5>
+                    <span class="badge bg-secondary">WGS 84</span>
+                </div>
+                <div class="card-body px-4 py-4">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>ESTADO DEL SERVICIO</th>
+                                    <th>CÓDIGO DE COLOR</th>
+                                    <th class="text-center">CANTIDAD</th>
+                                    <th class="text-end">PORCENTAJE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="sig-status-dot bg-success"></span>
+                                            <span class="fw-medium">Normal (Al día)</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-success bg-opacity-10 text-success border border-success">#10b981 Verde</span></td>
+                                    <td class="text-center fw-bold">@Model.ConexionesNormales</td>
+                                    <td class="text-end fw-bold">
+                                        @(Model.TotalConexiones > 0 ? (Model.ConexionesNormales * 100.0 / Model.TotalConexiones).ToString("F1") : "0")%
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="sig-status-dot bg-warning"></span>
+                                            <span class="fw-medium">Para Corte (Mora acumulada)</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-warning bg-opacity-10 text-warning border border-warning">#f59e0b Amarillo/Naranja</span></td>
+                                    <td class="text-center fw-bold text-warning">@Model.ConexionesParaCorte</td>
+                                    <td class="text-end fw-bold text-warning">
+                                        @(Model.TotalConexiones > 0 ? (Model.ConexionesParaCorte * 100.0 / Model.TotalConexiones).ToString("F1") : "0")%
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="sig-status-dot bg-danger"></span>
+                                            <span class="fw-medium">Cortado (Servicio suspendido)</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-danger bg-opacity-10 text-danger border border-danger">#ef4444 Rojo</span></td>
+                                    <td class="text-center fw-bold text-danger">@Model.ConexionesCortadas</td>
+                                    <td class="text-end fw-bold text-danger">
+                                        @(Model.TotalConexiones > 0 ? (Model.ConexionesCortadas * 100.0 / Model.TotalConexiones).ToString("F1") : "0")%
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="sig-status-dot bg-secondary"></span>
+                                            <span class="fw-medium">Baja Parcial (Precintado / Retirado)</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">#64748b Gris/Pizarra</span></td>
+                                    <td class="text-center fw-bold">@Model.ConexionesBajaParcial</td>
+                                    <td class="text-end fw-bold">
+                                        @(Model.TotalConexiones > 0 ? (Model.ConexionesBajaParcial * 100.0 / Model.TotalConexiones).ToString("F1") : "0")%
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Field Operations Quick Stats -->
+        <div class="col-12 col-lg-5">
+            <div class="card sig-card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold mb-0 text-main">Operaciones de Campo Activas</h5>
+                </div>
+                <div class="card-body px-4 py-4 d-flex flex-column justify-content-between">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-body-tertiary">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-bicycle text-primary fs-3"></i>
+                                <div>
+                                    <div class="fw-bold">Operarios en Ruta</div>
+                                    <div class="small text-muted">Transmitiendo GPS activo</div>
+                                </div>
+                            </div>
+                            <span class="badge bg-success fs-6">@Model.TrabajadoresEnRuta de @Model.TotalTrabajadores</span>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-body-tertiary">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-journal-text text-warning fs-3"></i>
+                                <div>
+                                    <div class="fw-bold">Órdenes de Asignación Activas</div>
+                                    <div class="small text-muted">En progreso o pendientes</div>
+                                </div>
+                            </div>
+                            <span class="badge bg-warning text-dark fs-6">@Model.AsignacionesActivas</span>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-body-tertiary">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-shield-check text-success fs-3"></i>
+                                <div>
+                                    <div class="fw-bold">Validación Geodésica GPS</div>
+                                    <div class="small text-muted">Radio de tolerancia estricto</div>
+                                </div>
+                            </div>
+                            <span class="badge bg-primary fs-6">&le; 60 metros</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-2">
+                        <a asp-action="Asignaciones" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-signpost-split me-1"></i> Asignar Rutas
+                        </a>
+                        <a asp-action="Monitoreo" class="btn btn-primary w-100">
+                            <i class="bi bi-geo-alt-fill me-1"></i> Rastrear en Mapa
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sig-status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>

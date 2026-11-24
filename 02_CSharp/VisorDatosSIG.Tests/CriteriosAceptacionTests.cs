@@ -316,6 +316,215 @@ public static class CriteriosAceptacionTests
         Assert(okEliminar, "CA-13: Debe poder eliminar el usuario de prueba correctamente");
     }
 
+    /// <summary>
+    /// Restablece de forma idempotente los datos del módulo de agua potable para garantizar aislamiento en pruebas.
+    /// </summary>
+    public static async Task ResetTestDataAguaAsync(DbConnectionFactory dbFactory)
+    {
+        using var conn = (System.Data.SqlClient.SqlConnection)await dbFactory.CrearConexionAbiertaAsync();
+        const string sql = @"
+            DELETE FROM dbo.MonitoreoTrabajador;
+            DELETE FROM dbo.AsignacionDetalle;
+            DELETE FROM dbo.Asignaciones;
+            DELETE FROM dbo.ConexionesAgua;
+            DELETE FROM dbo.Trabajadores;
+
+            INSERT INTO dbo.Trabajadores (CodigoTrabajador, NombreCompleto, DocumentoIdentidad, Telefono, TipoTrabajador, Estado, Vehiculo, IdUsuario, Activo)
+            VALUES
+                ('TRAB-001', 'Juan Pérez Morales',      '8493021 SC', '77012345', 'Cortador',    'Disponible', 'Moto',     NULL, 1),
+                ('TRAB-002', 'Roberto Gómez Tapia',    '7102934 SC', '76098765', 'Cortador',    'Disponible', 'Moto',     NULL, 1),
+                ('TRAB-003', 'Marcos Suárez Vaca',     '6192834 SC', '71034567', 'Reconector',  'Disponible', 'Moto',     NULL, 1),
+                ('TRAB-004', 'David Rojas Peña',       '5918273 SC', '78045612', 'Reconector',  'Disponible', 'A pie',    NULL, 1);
+
+            DECLARE @IdLoteA1 INT = (SELECT TOP 1 IdLote FROM dbo.Lotes WHERE CodigoLote = 'LT-A-01');
+            DECLARE @IdLoteA2 INT = (SELECT TOP 1 IdLote FROM dbo.Lotes WHERE CodigoLote = 'LT-A-02');
+            DECLARE @IdLoteA3 INT = (SELECT TOP 1 IdLote FROM dbo.Lotes WHERE CodigoLote = 'LT-A-03');
+            DECLARE @IdLoteB1 INT = (SELECT TOP 1 IdLote FROM dbo.Lotes WHERE CodigoLote = 'LT-B-01');
+            DECLARE @IdLoteB2 INT = (SELECT TOP 1 IdLote FROM dbo.Lotes WHERE CodigoLote = 'LT-B-02');
+            DECLARE @IdLoteB3 INT = (SELECT TOP 1 IdLote FROM dbo.Lotes WHERE CodigoLote = 'LT-B-03');
+
+            INSERT INTO dbo.ConexionesAgua 
+            (CodigoConexion, NumeroMedidor, IdLote, CodigoLote, CodigoManzana, Titular, Direccion, Categoria, EstadoConexion, MesesMora, SaldoPendiente, UltimaLectura, FechaUltimaLectura, Longitud, Latitud, Geometria, Activo)
+            VALUES
+                ('CON-1001', 'MED-5541', @IdLoteA1, 'LT-A-01', 'MZ-A', 'Carlos Mendoza Ramos',        'Av. Los Libertadores 142', 'Doméstico',  'ParaCorte',   3, 345.50, 482.30, '2026-09-15', -77.03725, -12.09475, GEOMETRY::Point(-77.03725, -12.09475, 4326), 1),
+                ('CON-1002', 'MED-5542', @IdLoteA2, 'LT-A-02', 'MZ-A', 'Inmobiliaria El Roble S.A.C.', 'Av. Los Libertadores 156', 'Comercial',  'Normal',      0,   0.00, 1250.80, '2026-10-01', -77.03600, -12.09475, GEOMETRY::Point(-77.03600, -12.09475, 4326), 1),
+                ('CON-1003', 'MED-5543', @IdLoteA3, 'LT-A-03', 'MZ-A', 'Elena Gutiérrez Vega',        'Calle Los Álamos 210',     'Doméstico',  'Cortado',     5, 620.00, 315.00, '2026-08-20', -77.03600, -12.09520, GEOMETRY::Point(-77.03600, -12.09520, 4326), 1),
+                ('CON-1004', 'MED-5544', @IdLoteB1, 'LT-B-01', 'MZ-B', 'Banco Metropolitano',          'Av. El Sol 402',           'Comercial',  'ParaCorte',   2, 890.20, 2450.10, '2026-09-28', -77.03750, -12.09350, GEOMETRY::Point(-77.03750, -12.09350, 4326), 1),
+                ('CON-1005', 'MED-5545', @IdLoteB2, 'LT-B-02', 'MZ-B', 'Lucía Fernández Silva',       'Av. El Sol 418',           'Doméstico',  'Normal',      0,   0.00, 198.40, '2026-10-05', -77.03650, -12.09350, GEOMETRY::Point(-77.03650, -12.09350, 4326), 1),
+                ('CON-1006', 'MED-5546', @IdLoteB3, 'LT-B-03', 'MZ-B', 'Centro Médico San Isidro',     'Calle Los Pinos 305',      'Equipamiento', 'BajaParcial', 0,   0.00, 89.00, '2026-07-10', -77.03550, -12.09350, GEOMETRY::Point(-77.03550, -12.09350, 4326), 1),
+                ('CON-1007', 'MED-5547', NULL, 'LT-C-01', 'MZ-C', 'Guillermo Paz Soldán',       'Av. Principal 550',        'Doméstico',  'ParaCorte',   4, 410.00, 620.50, '2026-08-30', -77.03850, -12.09600, GEOMETRY::Point(-77.03850, -12.09600, 4326), 1),
+                ('CON-1008', 'MED-5548', NULL, 'LT-C-02', 'MZ-C', 'Farmacia Santa María',       'Av. Principal 562',        'Comercial',  'Cortado',     1, 150.00, 440.00, '2026-10-10', -77.03750, -12.09600, GEOMETRY::Point(-77.03750, -12.09600, 4326), 1),
+                ('CON-1009', 'MED-5549', NULL, 'LT-D-01', 'MZ-D', 'Jorge Valenzuela Prado',     'Pasaje Santa Rosa 12',     'Doméstico',  'Normal',      0,   0.00, 312.20, '2026-10-02', -77.03450, -12.09450, GEOMETRY::Point(-77.03450, -12.09450, 4326), 1),
+                ('CON-1010', 'MED-5550', NULL, 'LT-D-02', 'MZ-D', 'Panadería La Espiga',        'Pasaje Santa Rosa 24',     'Comercial',  'ParaCorte',   2, 290.00, 890.00, '2026-09-25', -77.03350, -12.09450, GEOMETRY::Point(-77.03350, -12.09450, 4326), 1);
+
+            DECLARE @IdT1 INT = (SELECT TOP 1 IdTrabajador FROM dbo.Trabajadores WHERE CodigoTrabajador = 'TRAB-001');
+            DECLARE @IdT2 INT = (SELECT TOP 1 IdTrabajador FROM dbo.Trabajadores WHERE CodigoTrabajador = 'TRAB-002');
+            DECLARE @IdT3 INT = (SELECT TOP 1 IdTrabajador FROM dbo.Trabajadores WHERE CodigoTrabajador = 'TRAB-003');
+            DECLARE @IdT4 INT = (SELECT TOP 1 IdTrabajador FROM dbo.Trabajadores WHERE CodigoTrabajador = 'TRAB-004');
+
+            INSERT INTO dbo.MonitoreoTrabajador (IdTrabajador, IdAsignacionActiva, Latitud, Longitud, VelocidadKmH, Rumbo, PrecisionM, BateriaPorcentaje, UltimaActualizacion, EnLinea, Geometria)
+            VALUES 
+                (@IdT1, NULL, -12.09400, -77.03700, 18.5, 90.0, 4.0, 92, SYSUTCDATETIME(), 1, GEOMETRY::Point(-77.03700, -12.09400, 4326)),
+                (@IdT2, NULL, -12.09500, -77.03600,  0.0,  0.0, 3.5, 85, SYSUTCDATETIME(), 1, GEOMETRY::Point(-77.03600, -12.09500, 4326)),
+                (@IdT3, NULL, -12.09350, -77.03800, 25.0, 180.0, 5.0, 78, SYSUTCDATETIME(), 1, GEOMETRY::Point(-77.03800, -12.09350, 4326)),
+                (@IdT4, NULL, -12.09600, -77.03500,  4.5, 270.0, 6.0, 95, SYSUTCDATETIME(), 1, GEOMETRY::Point(-77.03500, -12.09600, 4326));
+        ";
+        using var cmd = new System.Data.SqlClient.SqlCommand(sql, conn);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// CA-14: Modelo de datos de agua potable, conexiones georreferenciadas y estados de servicio.
+    /// </summary>
+    public static async Task Test_CA14_ModuloAguaDominioYConexionesAsync(IAguaService aguaService)
+    {
+        // 1. Dashboard de Agua
+        var dashboard = await aguaService.ObtenerDashboardAsync();
+        Assert(dashboard.TotalConexiones >= 10, $"CA-14: Debe haber al menos 10 conexiones en BD (obtenidas: {dashboard.TotalConexiones})");
+        Assert(dashboard.ConexionesParaCorte > 0, "CA-14: Debe haber conexiones con estado ParaCorte");
+        Assert(dashboard.ConexionesCortadas > 0, "CA-14: Debe haber conexiones con estado Cortado");
+        Assert(dashboard.TotalTrabajadores >= 4, "CA-14: Debe haber al menos 4 operarios de campo registrados");
+
+        // 2. Filtro de conexiones por estado
+        var paraCorte = await aguaService.ObtenerConexionesAsync("ParaCorte");
+        Assert(paraCorte.Count > 0, "CA-14: Debe recuperar conexiones ParaCorte");
+        Assert(paraCorte.All(c => c.EstadoConexion == "ParaCorte"), "CA-14: Todas las conexiones filtradas deben tener estado ParaCorte");
+        Assert(paraCorte.All(c => c.Longitud != 0 && c.Latitud != 0), "CA-14: Todas las conexiones deben tener coordenadas WGS84");
+
+        // 3. Trabajadores por tipo
+        var cortadores = await aguaService.ObtenerTrabajadoresAsync("Cortador");
+        var reconectores = await aguaService.ObtenerTrabajadoresAsync("Reconector");
+        Assert(cortadores.Count >= 2, "CA-14: Debe haber al menos 2 cortadores");
+        Assert(reconectores.Count >= 2, "CA-14: Debe haber al menos 2 reconectores");
+    }
+
+    /// <summary>
+    /// CA-15: Algoritmo de Dijkstra sobre red vial (dbo.Vias) para generar ruta secuencial (1, 2, 3...) sin cruzar manzanas.
+    /// </summary>
+    public static async Task Test_CA15_DijkstraRoutingRedVialAsync(IAguaService aguaService, IDijkstraRoutingService dijkstraService)
+    {
+        // 1. Obtener candidatos para corte desde el almacén central
+        double inicioLon = -77.03450;
+        double inicioLat = -12.09350;
+        var candidatos = await aguaService.ObtenerCandidatosAsignacionAsync("Corte", 3, inicioLon, inicioLat);
+        Assert(candidatos.Count >= 2, "CA-15: Debe haber al menos 2 candidatos para generar ruta de prueba");
+
+        // 2. Calcular ruta óptima con Dijkstra
+        var ruta = await dijkstraService.CalcularRutaOptimaAsync(inicioLon, inicioLat, candidatos);
+        Assert(ruta.DistanciaTotalMetros > 0, "CA-15: La distancia calculada debe ser mayor a 0 metros");
+        Assert(!string.IsNullOrWhiteSpace(ruta.RutaLineStringWkt), "CA-15: Debe generar WKT LINESTRING para la red de vías");
+        Assert(ruta.RutaLineStringWkt.StartsWith("LINESTRING", StringComparison.OrdinalIgnoreCase), "CA-15: El formato de la geometría debe ser LINESTRING");
+        Assert(ruta.PuntosOrdenados.Count == candidatos.Count, "CA-15: Todos los puntos destino deben estar en la ruta ordenada");
+
+        // 3. Verificar orden secuencial estricto 1, 2, 3...
+        for (int i = 0; i < ruta.PuntosOrdenados.Count; i++)
+        {
+            Assert(ruta.PuntosOrdenados[i].OrdenSecuencia == i + 1, $"CA-15: Secuencia debe ser {i + 1} para el punto {i}");
+            Assert(ruta.PuntosOrdenados[i].DistanciaTramoMetros >= 0, "CA-15: Distancia de tramo no puede ser negativa");
+        }
+    }
+
+    /// <summary>
+    /// CA-16: Asignación de órdenes de trabajo y validación geodésica estricta de GPS móvil en campo.
+    /// </summary>
+    public static async Task Test_CA16_AsignacionesYValidacionGpsCampoAsync(IAguaService aguaService)
+    {
+        // 1. Obtener un cortador disponible
+        var trabajadores = await aguaService.ObtenerTrabajadoresAsync("Cortador");
+        var cortador = trabajadores.First();
+
+        // 2. Obtener 2 candidatos para corte
+        var candidatos = await aguaService.ObtenerCandidatosAsignacionAsync("Corte", 2, -77.03450, -12.09350);
+        Assert(candidatos.Count > 0, "CA-16: Debe haber conexiones disponibles para asignar");
+
+        // 3. Crear asignación con ruta óptima
+        var request = new Application.DTOs.Agua.CrearAsignacionRequestDto
+        {
+            IdTrabajador = cortador.IdTrabajador,
+            TipoServicio = "Corte",
+            PuntoPartidaNombre = "Base Central",
+            PuntoPartidaLon = -77.03450,
+            PuntoPartidaLat = -12.09350,
+            IdConexiones = candidatos.Select(c => c.IdConexion).ToList(),
+            Notas = "Ruta de prueba automatizada CA-16",
+            Usuario = "admin_test"
+        };
+
+        var asignacion = await aguaService.CrearAsignacionConRutaAsync(request);
+        Assert(asignacion.IdAsignacion > 0, "CA-16: Debe retornar ID de asignación generado");
+        Assert(asignacion.CodigoAsignacion.StartsWith("ASIG-"), "CA-16: Código de asignación debe iniciar con ASIG-");
+        Assert(asignacion.Puntos.Count == candidatos.Count, "CA-16: Debe incluir los puntos solicitados");
+
+        // 4. Validar ejecución en campo con GPS PRESENT EN SITIO (<= 60 metros)
+        var primerPunto = asignacion.Puntos.First();
+        var respExito = await aguaService.RegistrarEjecucionCampoAsync(new Application.DTOs.Agua.RegistroEjecucionCampoRequestDto
+        {
+            IdDetalle = primerPunto.IdDetalle,
+            EstadoResultado = "Ejecutado",
+            LecturaActual = 520.40m,
+            NumeroMedidorReportado = primerPunto.NumeroMedidor,
+            FotoMedidorUrl = "/evidencias/corte_medidor_01.jpg",
+            Observacion = "Corte realizado con éxito",
+            GpsLat = primerPunto.Latitud + 0.00005, // Aprox ~5 metros del medidor
+            GpsLon = primerPunto.Longitud + 0.00005,
+            ToleranciaMetrosMax = 60.0
+        });
+
+        Assert(respExito.Exito, "CA-16: El registro de ejecución debe ser exitoso");
+        Assert(respExito.ValidacionGpsExitosa, "CA-16: La validación GPS debe ser exitosa dentro de la tolerancia de 60m");
+        Assert(respExito.DistanciaMetros <= 60.0m, "CA-16: Distancia calculada debe ser menor o igual a 60m");
+
+        // 5. Validar ejecución en campo con reporte de 'CasaCerrada' (también exige GPS)
+        if (asignacion.Puntos.Count > 1)
+        {
+            var segundoPunto = asignacion.Puntos[1];
+            var respCasaCerrada = await aguaService.RegistrarEjecucionCampoAsync(new Application.DTOs.Agua.RegistroEjecucionCampoRequestDto
+            {
+                IdDetalle = segundoPunto.IdDetalle,
+                EstadoResultado = "CasaCerrada",
+                Observacion = "Predio sin acceso, reja cerrada y perro bravo",
+                GpsLat = segundoPunto.Latitud,
+                GpsLon = segundoPunto.Longitud,
+                ToleranciaMetrosMax = 60.0
+            });
+
+            Assert(respCasaCerrada.Exito, "CA-16: El reporte de CasaCerrada debe ser registrado");
+            Assert(respCasaCerrada.ValidacionGpsExitosa, "CA-16: El reporte CasaCerrada debe confirmar presencia en el sitio (ValidacionGpsExitosa = true)");
+        }
+    }
+
+    /// <summary>
+    /// CA-17: Monitoreo y telemetría de operarios en tiempo real para panel de control central.
+    /// </summary>
+    public static async Task Test_CA17_MonitoreoTiempoRealAsync(IAguaService aguaService)
+    {
+        var trabajadores = await aguaService.ObtenerTrabajadoresAsync();
+        var primerTrab = trabajadores.First();
+
+        // 1. Enviar telemetría GPS del operario
+        bool actOk = await aguaService.ActualizarUbicacionMonitoreoAsync(new Application.DTOs.Agua.ActualizarUbicacionGpsRequestDto
+        {
+            IdTrabajador = primerTrab.IdTrabajador,
+            Latitud = -12.09450,
+            Longitud = -77.03720,
+            VelocidadKmH = 24.5,
+            Rumbo = 135.0,
+            PrecisionM = 3.8,
+            BateriaPorcentaje = 84
+        });
+        Assert(actOk, "CA-17: Debe actualizar la telemetría GPS del operario en tiempo real");
+
+        // 2. Consultar lista de monitoreo administrativo
+        var monitoreo = await aguaService.ObtenerMonitoreoOperariosAsync();
+        Assert(monitoreo.Count > 0, "CA-17: Debe consultar la lista de monitoreo de operarios");
+
+        var op = monitoreo.FirstOrDefault(m => m.IdTrabajador == primerTrab.IdTrabajador);
+        Assert(op != null, "CA-17: El operario debe estar presente en el panel de monitoreo");
+        Assert(op!.EnLinea, "CA-17: El operario debe figurar En Línea");
+        Assert(op.BateriaPorcentaje == 84, "CA-17: El porcentaje de batería debe coincidir con la última telemetría");
+        Assert(Math.Abs(op.Latitud - (-12.09450)) < 0.0001, "CA-17: Latitud debe coincidir");
+    }
+
     private static void Assert(bool condition, string message)
     {
         if (!condition)

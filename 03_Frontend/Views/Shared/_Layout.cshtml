@@ -68,37 +68,54 @@
                     @if (isAuth)
                     {
                         <!-- Acciones Centrales / Búsqueda Rápida en Navbar (Desktop) -->
-                        <div class="d-none d-xl-flex align-items-center flex-grow-1 max-w-500 mx-4">
-                            <div class="input-group sig-nav-search">
+                        <form id="navQuickSearchForm" class="d-none d-xl-flex align-items-center flex-grow-1 max-w-500 mx-4" onsubmit="event.preventDefault(); window.ejecutarBusquedaNavbar();">
+                            <div class="input-group sig-nav-search w-100">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" id="navQuickSearchInput" class="form-control" placeholder="Búsqueda rápida por código, titular o calle..." autocomplete="off">
-                                <button class="btn btn-primary" type="button" id="btnNavQuickSearch">Buscar</button>
+                                <button class="btn btn-primary" type="submit" id="btnNavQuickSearch">Buscar</button>
                             </div>
-                        </div>
+                        </form>
 
                         <!-- Menú Usuario, Navegación y Switch de Tema -->
                         <div class="d-flex align-items-center gap-1 gap-sm-2 ms-auto">
-                            <!-- Enlace Principal: Visor Cartográfico -->
-                            <a asp-controller="Home" asp-action="Index" class="btn btn-sig-nav d-none d-sm-inline-flex @(currentAction == "Index" && currentController == "Home" ? "active" : "")" title="Visor Cartográfico">
-                                <i class="bi bi-map-fill me-1"></i> <span class="d-none d-md-inline">Visor Cartográfico</span>
+                            <!-- 1. Dashboard General -->
+                            <a asp-controller="Agua" asp-action="Dashboard" class="btn btn-sig-nav @(currentController == "Agua" && currentAction == "Dashboard" ? "active" : "")" title="Dashboard General de Conexiones">
+                                <i class="bi bi-speedometer2 me-1"></i> <span class="d-none d-lg-inline">Dashboard</span>
                             </a>
 
-                            <!-- Botón Modo Oscuro / Modo Claro (Justo al lado de Visor Cartográfico) -->
+                            <!-- 2. Visualización General -->
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-sig-nav @(currentAction == "Index" && currentController == "Home" ? "active" : "")" title="Visualización General Cartográfica">
+                                <i class="bi bi-map-fill me-1"></i> <span class="d-none d-lg-inline">Visualización</span>
+                            </a>
+
+                            <!-- 3. Asignaciones de Corte y Reconexión -->
+                            <a asp-controller="Agua" asp-action="Asignaciones" class="btn btn-sig-nav @(currentController == "Agua" && currentAction == "Asignaciones" ? "active" : "")" title="Asignaciones de Corte y Reconexión (Dijkstra)">
+                                <i class="bi bi-signpost-2 me-1"></i> <span class="d-none d-lg-inline">Asignaciones</span>
+                            </a>
+
+                            <!-- 4. Monitoreo en Tiempo Real -->
+                            <a asp-controller="Agua" asp-action="Monitoreo" class="btn btn-sig-nav @(currentController == "Agua" && currentAction == "Monitoreo" ? "active" : "")" title="Monitoreo Satelital de Operarios">
+                                <i class="bi bi-broadcast me-1 text-success"></i> <span class="d-none d-lg-inline">Monitoreo</span>
+                            </a>
+
+                            <!-- Botón Modo Oscuro / Modo Claro -->
                             <button class="btn btn-sig-nav btn-sig-theme-toggle d-flex align-items-center gap-1.5 px-2 px-md-3" id="btnThemeToggle" type="button" title="Alternar entre modo oscuro y modo claro" aria-label="Cambiar tema">
                                 <i class="bi bi-moon-stars-fill text-warning fs-6" id="themeIcon"></i>
-                                <span class="d-none d-md-inline fw-medium" id="themeLabel">Modo Oscuro</span>
+                                <span class="d-none d-xl-inline fw-medium" id="themeLabel">Modo Oscuro</span>
                             </button>
 
-                            <!-- Dropdown de Administración (EXCLUSIVO PARA ADMINISTRADORES) -->
+                            <!-- 5. Datos de Información Geográfica & Administración -->
                             @if (isAdmin)
                             {
                                 <div class="dropdown" id="adminNavDropdown">
-                                    <button class="btn btn-sig-nav dropdown-toggle @(currentController == "Admin" ? "active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Módulos de Administración">
-                                        <i class="bi bi-shield-lock-fill text-warning me-1"></i> <span class="d-none d-md-inline">Administración</span>
+                                    <button class="btn btn-sig-nav dropdown-toggle @(currentController == "Admin" ? "active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Datos de Información Geográfica">
+                                        <i class="bi bi-layers-fill text-warning me-1"></i> <span class="d-none d-lg-inline">Datos SIG</span>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end sig-dropdown-menu shadow-lg">
-                                        <li><h6 class="dropdown-header text-warning small"><i class="bi bi-gear-fill me-1"></i>Módulos de Administrador</h6></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Migraciones"><i class="bi bi-cloud-arrow-up-fill me-2 text-primary"></i>Historial de Migraciones</a></li>
+                                        <li><h6 class="dropdown-header text-warning small"><i class="bi bi-layers me-1"></i>Datos de Información Geográfica</h6></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Migraciones"><i class="bi bi-cloud-arrow-up-fill me-2 text-primary"></i>Carga de Shapefiles / Capas</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header text-warning small"><i class="bi bi-shield-lock-fill me-1"></i>Seguridad y Auditoría</h6></li>
                                         <li><a class="dropdown-item" asp-controller="Admin" asp-action="Auditoria"><i class="bi bi-journal-text me-2 text-info"></i>Bitácora de Auditoría</a></li>
                                         <li><a class="dropdown-item" asp-controller="Admin" asp-action="Usuarios"><i class="bi bi-people-fill me-2 text-success"></i>Gestión de Usuarios</a></li>
                                     </ul>
@@ -181,6 +198,26 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="~/js/auth.js" asp-append-version="true"></script>
+    <script>
+        window.ejecutarBusquedaNavbar = function() {
+            var inputNav = document.getElementById('navQuickSearchInput');
+            if (!inputNav) return;
+            var term = inputNav.value.trim();
+            if (!term) return;
+
+            if (typeof SigMap !== 'undefined' && typeof SigMap.openSidebarTab === 'function') {
+                SigMap.openSidebarTab('tab-busqueda');
+                var inputSidebar = document.getElementById('sidebarSearchInput');
+                if (inputSidebar) inputSidebar.value = term;
+                if (typeof SigSearch !== 'undefined') {
+                    SigSearch.executeSearch(term, '');
+                }
+            } else {
+                // Redirigir al visor cartográfico con el parámetro q en la URL
+                window.location.href = '/?q=' + encodeURIComponent(term);
+            }
+        };
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
